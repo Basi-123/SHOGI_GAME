@@ -1,0 +1,21 @@
+# バックアップファイル
+backup/
+backup_*/
+*_backup.html
+
+# 一時ファイル
+*.tmp
+*.temp
+
+# システムファイル
+.DS_Store
+Thumbs.db
+
+# エディタファイル
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ログファイル
+*.log

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>三十世紀将棋 - タイトル</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: "#FFC107",
+                        },
+                        "background-light": "#F7F7F7",
+                        "background-dark": "#121212",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1E1E1E",
+                        "text-light": "#000000",
+                        "text-dark": "#FFFFFF",
+                    },
+                    fontFamily: {
+                        display: ["Roboto", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        .game-title {
+            background: linear-gradient(135deg, #FFC107, #FF8F00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* 背景装飾用の将棋駒 */
+        .background-piece {
+            position: fixed;
+            opacity: 0.1;
+            font-size: 4rem;
+            color: #666;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .dark .background-piece {
+            color: #333;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+        
+        /* 個別のアニメーション遅延 */
+        .piece-1 { animation-delay: 0s; }
+        .piece-2 { animation-delay: -2s; }
+        .piece-3 { animation-delay: -4s; }
+        .piece-4 { animation-delay: -6s; }
+        .piece-5 { animation-delay: -8s; }
+        .piece-6 { animation-delay: -10s; }
+        .piece-7 { animation-delay: -12s; }
+        .piece-8 { animation-delay: -14s; }
+        .piece-9 { animation-delay: -16s; }
+        .piece-10 { animation-delay: -18s; }
+        
+        /* パーティクルエフェクト */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 193, 7, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            animation: particleFloat 8s linear infinite;
+        }
+        
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* グラデーション背景アニメーション */
+        .animated-gradient {
+            background: linear-gradient(-45deg, #FFC107, #FF9800, #FF5722, #E91E63);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* タイトルのグロウエフェクト */
+        .title-glow {
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.5), 0 0 20px rgba(255, 193, 7, 0.3), 0 0 30px rgba(255, 193, 7, 0.2);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            0% {
+                text-shadow: 0 0 10px rgba(255, 193, 7, 0.5), 0 0 20px rgba(255, 193, 7, 0.3), 0 0 30px rgba(255, 193, 7, 0.2);
+            }
+            100% {
+                text-shadow: 0 0 20px rgba(255, 193, 7, 0.8), 0 0 30px rgba(255, 193, 7, 0.5), 0 0 40px rgba(255, 193, 7, 0.3);
+            }
+        }
+        
+        /* スタートボタンエフェクト */
+        .start-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pulse 2s infinite;
+        }
+        
+        .start-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .start-button:hover::before {
+            left: 100%;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(255, 193, 7, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+            }
+        }
+        
+        /* テキストタイピングエフェクト */
+        .typing-effect {
+            overflow: hidden;
+            border-right: 2px solid #FFC107;
+            white-space: nowrap;
+            animation: typing 3s steps(20, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #FFC107; }
+        }
+        
+        /* キラキラエフェクト */
+        .sparkle {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: #FFD700;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            animation: sparkleFloat 4s linear infinite;
+        }
+        
+        @keyframes sparkleFloat {
+            0% {
+                transform: translateY(100vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        /* ダークモード時の背景 */
+        body.dark {
+            background-color: #1a1a1a !important;
+            background-image: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+        }
+        
+        /* より強力なダークモード背景設定 */
+        .dark body {
+            background-color: #1a1a1a !important;
+            background-image: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+        }
+        
+        /* フェードインアニメーション */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 遅延アニメーション */
+        .fade-in-delay-1 { animation-delay: 0.5s; }
+        .fade-in-delay-2 { animation-delay: 1s; }
+        .fade-in-delay-3 { animation-delay: 1.5s; }
+</style>
+</head>
+<body class="font-display" style="background-color: #FFFACD; background-image: linear-gradient(135deg, #FFFACD 0%, #FFF8DC 100%);">
+<!-- 背景装飾用の将棋駒 -->
+<div class="background-piece piece-1" style="top: 10%; left: 5%;">玉</div>
+<div class="background-piece piece-2" style="top: 20%; left: 15%;">飛</div>
+<div class="background-piece piece-3" style="top: 30%; left: 85%;">角</div>
+<div class="background-piece piece-4" style="top: 40%; left: 10%;">金</div>
+<div class="background-piece piece-5" style="top: 50%; left: 90%;">銀</div>
+<div class="background-piece piece-6" style="top: 60%; left: 5%;">桂</div>
+<div class="background-piece piece-7" style="top: 70%; left: 80%;">香</div>
+<div class="background-piece piece-8" style="top: 80%; left: 20%;">歩</div>
+<div class="background-piece piece-9" style="top: 15%; left: 70%;">王</div>
+<div class="background-piece piece-10" style="top: 85%; left: 75%;">と</div>
+
+<!-- 背景装飾用の特殊駒 -->
+<div class="background-piece piece-1" style="top: 25%; left: 50%; font-size: 3rem;">忍</div>
+<div class="background-piece piece-2" style="top: 35%; left: 25%; font-size: 3rem;">龍</div>
+<div class="background-piece piece-3" style="top: 45%; left: 65%; font-size: 3rem;">鳳</div>
+<div class="background-piece piece-4" style="top: 55%; left: 40%; font-size: 3rem;">炎</div>
+<div class="background-piece piece-5" style="top: 65%; left: 55%; font-size: 3rem;">水</div>
+<div class="background-piece piece-6" style="top: 75%; left: 35%; font-size: 3rem;">木</div>
+<div class="background-piece piece-7" style="top: 5%; left: 50%; font-size: 3rem;">光</div>
+<div class="background-piece piece-8" style="top: 95%; left: 45%; font-size: 3rem;">星</div>
+
+<div class="relative min-h-screen flex items-center justify-center">
+    <!-- メインコンテンツ -->
+    <div class="text-center">
+        <!-- ゲームタイトル -->
+        <div class="mb-8 fade-in">
+            <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="material-icons text-6xl text-white">sports_esports</span>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black game-title title-glow mb-4" style="font-family: 'MS Gothic', 'Hiragino Sans', sans-serif; color: #000000 !important; font-weight: 900; letter-spacing: 4px; text-stroke: 2px #000000; -webkit-text-stroke: 2px #000000;">三十世紀将棋</h1>
+            <p class="text-black text-xl md:text-2xl typing-effect fade-in-delay-1" style="width: 0; animation: typing 3s steps(20, end) forwards, blink-caret 0.75s step-end infinite; animation-delay: 1s;">特殊駒とスキルで戦う新感覚将棋</p>
+        </div>
+        
+        <!-- スタートボタン -->
+        <div class="fade-in-delay-2">
+            <button onclick="startGame()" class="start-button bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-2xl md:text-3xl font-bold py-4 px-12 rounded-2xl shadow-2xl transform transition-all duration-300">
+                <span class="material-icons mr-3 text-3xl">play_arrow</span>
+                スタート
+            </button>
+        </div>
+        
+        <!-- サブタイトル -->
+        <div class="mt-8 fade-in-delay-3">
+            <p class="text-black text-lg">クリックしてゲームを開始</p>
+        </div>
+    </div>
+</div>
+
+<script>
+        // パーティクルエフェクト生成
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 3 + 5) + 's';
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            document.body.appendChild(particle);
+            
+            // アニメーション終了後に削除
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 8000);
+        }
+
+        // キラキラエフェクト生成
+        function createSparkle() {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            sparkle.style.animationDelay = Math.random() * 1 + 's';
+            document.body.appendChild(sparkle);
+            
+            setTimeout(() => {
+                if (sparkle.parentNode) {
+                    sparkle.parentNode.removeChild(sparkle);
+                }
+            }, 4000);
+        }
+
+        // パーティクル生成の間隔設定
+        function startParticleEffect() {
+            setInterval(createParticle, 800);
+        }
+
+        // キラキラエフェクト開始関数
+        function startSparkleEffect() {
+            setInterval(createSparkle, 1200);
+        }
+
+        // ゲーム開始
+        function startGame() {
+            // ボタンクリック時のエフェクト
+            const button = event.target.closest('button');
+            button.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                button.style.transform = '';
+                // ホーム画面に遷移
+                window.location.href = 'home.html';
+            }, 150);
+        }
+
+        // ダークモード切り替え（キーボードショートカット用）
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+            
+            // 背景色を直接変更
+            const body = document.body;
+            if (isDark) {
+                body.style.backgroundColor = '#1a1a1a';
+                body.style.backgroundImage = 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)';
+            } else {
+                body.style.backgroundColor = '#FFFACD';
+                body.style.backgroundImage = 'linear-gradient(135deg, #FFFACD 0%, #FFF8DC 100%)';
+            }
+        }
+
+        // 初期化
+        window.onload = function() {
+            // ダークモードの復元
+            const savedDarkMode = localStorage.getItem('darkMode');
+            const body = document.body;
+            if (savedDarkMode === 'true') {
+                document.documentElement.classList.add('dark');
+                body.style.backgroundColor = '#1a1a1a';
+                body.style.backgroundImage = 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)';
+            } else {
+                body.style.backgroundColor = '#FFFACD';
+                body.style.backgroundImage = 'linear-gradient(135deg, #FFFACD 0%, #FFF8DC 100%)';
+            }
+            
+            // パーティクルエフェクト開始
+            startParticleEffect();
+            
+            // キラキラエフェクト開始
+            startSparkleEffect();
+        }
+
+        // キーボードショートカット
+        document.addEventListener('keydown', function(e) {
+            // Enterキーまたはスペースキーでゲーム開始
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                startGame();
+            }
+            // Dキーでダークモード切り替え
+            if (e.key === 'd' || e.key === 'D') {
+                toggleDarkMode();
+            }
+        });
+    </script>
+</body>
+</html>

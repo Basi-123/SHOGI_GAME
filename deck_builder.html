@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>マイデッキ作成</title>
+<style>
+  *{box-sizing:border-box} 
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans JP',Meiryo,sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .wrap{
+    max-width:1400px;
+    margin:0 auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.25);
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 16px;
+  }
+  h1{
+    margin:0;
+    font-size: 28px;
+    color: #333;
+    font-weight: 800;
+  }
+  a.link{
+    color:#0056b3;
+    text-decoration:none;
+    font-weight:700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  a.link:hover{ background: #f0f8ff; }
+  
+  .main-content{
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+  }
+  
+  .section{
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+  }
+  
+  .section h2{
+    margin: 0 0 16px 0;
+    font-size: 20px;
+    color: #333;
+    font-weight: 700;
+  }
+  
+  .board-container{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .board-layout{
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 2px;
+    background: #8b5a2b;
+    padding: 8px;
+    border-radius: 8px;
+    border: 3px solid #5a3b17;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  
+  .board-cell{
+    width: 50px;
+    height: 50px;
+    background: #f1d1a1;
+    border: 1px solid #d1a574;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+    color: #333;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .board-cell:hover{
+    background: #ffe6b3;
+    transform: scale(1.05);
+  }
+  
+  .board-cell.player{
+    background: #ffe6b3;
+    border-color: #ffd54f;
+  }
+  
+  .board-cell.opponent{
+    background: #ffebee;
+    border-color: #f44336;
+  }
+  
+  .board-cell.has-piece{
+    background: #fff3cd;
+    border-color: #ffc107;
+    box-shadow: inset 0 0 8px rgba(255,193,7,0.3);
+  }
+  
+  .board-cell.drag-over{
+    background: #d4edda;
+    border-color: #28a745;
+    transform: scale(1.1);
+  }
+  
+  .board-cell.valid-position{
+    background: #e8f5e8;
+    border-color: #28a745;
+    box-shadow: inset 0 0 8px rgba(40,167,69,0.3);
+  }
+  
+  .board-piece{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+    color: #333;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    user-select: none;
+  }
+  
+  .board-piece.custom{
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes glow {
+    from { text-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 0 5px rgba(255,193,7,0.5); }
+    to { text-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 0 10px rgba(255,193,7,0.8); }
+  }
+  
+  .piece-palette{
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+  
+  .palette-title{
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  
+  .piece-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 8px;
+  }
+  
+  .piece-card{
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: grab;
+    transition: all 0.2s;
+    position: relative;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .piece-card:active{
+    cursor: grabbing;
+    transform: scale(0.95);
+  }
+  
+  .piece-card:hover{
+    border-color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+  }
+  
+  .piece-card.custom{
+    border-color: #ffc107;
+    background: #fffbf0;
+  }
+  
+  .piece-card.boss{
+    border-color: #dc3545;
+    background: #f8d7da;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .piece-card.boss:hover{
+    border-color: #dc3545;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .piece-char{
+    font-size: 24px;
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .piece-name{
+    font-size: 10px;
+    color: #666;
+    font-weight: 600;
+  }
+  
+  .piece-desc{
+    font-size: 8px;
+    color: #999;
+    margin-top: 2px;
+  }
+  
+  .deck-preview{
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 300px;
+  }
+  
+  .deck-title{
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  
+  .deck-pieces{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .deck-piece{
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(45deg, #dc3545, #c82333);
+    border: 2px solid #721c24;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    box-shadow: 0 0 6px rgba(220,53,69,.45);
+  }
+  
+  .deck-piece.custom{
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+    border-color: #d39e00;
+    box-shadow: 0 0 6px rgba(255,193,7,.45);
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  .controls{
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  
+  button{
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+  
+  button:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+  }
+  
+  button.secondary{
+    background: linear-gradient(45deg, #6c757d, #495057);
+  }
+  
+  button.success{
+    background: linear-gradient(45deg, #28a745, #1e7e34);
+  }
+  
+  button.warning{
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+    color: #333;
+  }
+  
+  .stats{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .empty-deck{
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 40px 20px;
+  }
+  
+  .deck-saves{
+    margin-top: 20px;
+  }
+  
+  .save-item{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .save-name{
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .save-date{
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .save-actions{
+    display: flex;
+    gap: 8px;
+  }
+  
+  .save-actions button{
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .instructions{
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #1565c0;
+  }
+  
+  .instructions strong{
+    color: #0d47a1;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>マイデッキ作成</h1>
+      <a class="link" href="home.html">← ホームへ戻る</a>
+    </header>
+    
+    <div class="main-content">
+      <div class="section">
+        <h2>ドラッグ&ドロップでデッキ作成</h2>
+        
+        <div class="instructions">
+          <strong>使い方:</strong> 右の駒をドラッグして盤面にドロップしてください。<br>
+          盤面の駒をクリックすると削除できます。プレイヤー側（黄色）に駒を配置してください。
+        </div>
+        
+        <div class="board-container">
+          <div class="board-layout" id="board-preview"></div>
+        </div>
+        
+        <div class="stats">
+          <span>配置済み: <span id="placed-count">0</span>/81</span>
+          <span>カスタム駒: <span id="custom-count">0</span>個</span>
+        </div>
+        
+        <div class="controls">
+          <button onclick="saveDeck()" class="success">マイデッキを保存</button>
+          <button onclick="saveAsMyDeck()" class="success" style="background: linear-gradient(45deg, #28a745, #1e7e34);">マイデッキとして保存</button>
+          <button onclick="clearBoard()" class="secondary">盤面クリア</button>
+          <button onclick="loadDefaultDeck()" class="warning">デフォルト配置</button>
+          <button onclick="clearSavedDeck()" class="warning" style="background: linear-gradient(45deg, #dc3545, #c82333);">保存デッキクリア</button>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h2>使える駒一覧</h2>
+        <div class="piece-palette">
+          <div class="palette-title">駒を選択</div>
+          <div class="piece-grid" id="piece-grid"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section" style="margin-top: 24px;">
+      <h2>保存されたデッキ</h2>
+      <div class="deck-saves" id="deck-saves"></div>
+    </div>
+  </div>
+
+<script>
+  const ALL_PIECES = [
+    { char: '香', name: '香車', desc: '前方に何マスでも', type: 'standard' },
+    { char: '桂', name: '桂馬', desc: '前方2マス＋左右1マス', type: 'standard' },
+    { char: '銀', name: '銀将', desc: '前前斜・前・後斜', type: 'standard' },
+    { char: '金', name: '金将', desc: '前前斜・前・左右・後', type: 'standard' },
+    { char: '玉', name: '玉将', desc: '周囲8方向に1マス', type: 'standard' },
+    { char: '飛', name: '飛車', desc: '縦横に何マスでも', type: 'standard' },
+    { char: '角', name: '角行', desc: '斜めに何マスでも', type: 'standard' },
+    { char: '歩', name: '歩兵', desc: '前方に1マス', type: 'standard' },
+    { char: '忍', name: '忍者', desc: '王の1歩＋前方ナイト', type: 'custom' },
+    { char: '影', name: '影武者', desc: '斜め2マス＋左右1マス', type: 'custom' },
+    { char: '砲', name: '砲台', desc: '縦横移動、挟み取り', type: 'custom' },
+    { char: '竜', name: '小竜', desc: '斜め無限＋十字1マス', type: 'custom' },
+    { char: '鳳', name: '鳳凰', desc: '十字無限＋斜め1マス', type: 'custom' },
+    { char: '炎', name: '炎魔', desc: '周囲8方向＋炎の伝播', type: 'custom' },
+    { char: '火', name: '火神', desc: '十字3マス＋火の壁', type: 'custom' },
+    { char: '水', name: '水神', desc: '斜め2マス＋水の流れ', type: 'custom' },
+    { char: '波', name: '波使', desc: '十字2マス＋波の伝播', type: 'custom' },
+    { char: '木', name: '樹木', desc: '8方向1マス＋木の成長', type: 'custom' },
+    { char: '葉', name: '大葉', desc: '斜め2マス＋葉の舞い散り', type: 'custom' },
+    { char: '光', name: '光神', desc: '斜め無制限＋壁反射', type: 'custom' },
+    { char: '星', name: '星使', desc: '十字無制限＋星の軌道', type: 'custom' },
+    { char: '闇', name: '闇神', desc: '8方向2マス＋敵駒闇覆い（次番まで）', type: 'custom' },
+    { char: '魔', name: '悪魔', desc: '十字無制限＋敵駒10%消滅', type: 'custom' },
+    { char: '銅', name: '銅鉱石', desc: '8方向1マス＋銅の導電', type: 'custom' },
+    { char: '鉄', name: '鉄鉱石', desc: '十字無制限＋鉄の磁力', type: 'custom' },
+    { char: '錫', name: '錫鉱石', desc: '斜め無制限＋錫の柔軟', type: 'custom' },
+    { char: '鉛', name: '鉛鉱石', desc: '8方向2マス＋鉛の重さ', type: 'custom' },
+    { char: '宝', name: '宝', desc: '8方向1マス＋宝の輝き（20%で金・銀・銅獲得）', type: 'custom' },
+    { char: '電', name: '電気', desc: '縦横無制限＋電気の導電（20%で敵駒感電）', type: 'custom' },
+    { char: '雷', name: '雷', desc: '斜め無制限＋雷の放電（10%で相手持ち駒消滅）', type: 'custom' },
+    { char: '時', name: '時', desc: '8方向2マス移動', type: 'custom' },
+    { char: '氷', name: '氷', desc: '8方向1マス移動', type: 'custom' },
+    { char: '雪', name: '雪', desc: '縦横無制限移動＋移動時5%で氷入手', type: 'custom' },
+    { char: '砂', name: '砂', desc: '8方向3マス移動', type: 'custom' },
+    { char: '風', name: '風', desc: '縦横無制限移動', type: 'custom' },
+    { char: '苔', name: '苔', desc: '縦横1マスずつ移動可能', type: 'custom' },
+    { char: '魚', name: '魚', desc: '桂馬のような動き', type: 'custom' },
+    { char: '雲', name: '雲', desc: '8方向無制限移動', type: 'custom' },
+    { char: '虹', name: '虹', desc: '8方向1マス移動', type: 'custom' },
+    { char: '毒', name: '毒', desc: '9行目2列目・8列目のみ', type: 'custom' },
+    { char: '沼', name: '沼', desc: '9行目3列目・7列目、8行目5列目のみ', type: 'custom' },
+    { char: '鏡', name: '鏡', desc: '9行目2列目・8列目のみ', type: 'custom' },
+    { char: '映', name: '映', desc: '9行目3列目・7列目のみ', type: 'custom' },
+    { char: '幻', name: '幻', desc: '8方向無制限移動', type: 'custom' },
+    { char: '霧', name: '霧', desc: '8方向2マス移動', type: 'custom' },
+    { char: '終', name: '終', desc: '8方向無制限移動', type: 'custom' },
+    { char: '焉', name: '焉', desc: '8方向1マス移動', type: 'custom' },
+    { char: 'あ', name: 'あ', desc: '縦横4方向に無限移動＋斜め4方向に1マス移動可能。移動時に周囲の敵駒を歩に変える。', type: 'boss' },
+    { char: '牢', name: '牢', desc: '前後無限移動＋斜め4方向に1マス移動可能。敵駒を牢に閉じ込める力を持つ。', type: 'custom' },
+    { char: '柵', name: '柵', desc: '前後左右に1マス移動可能。堅牢な防御を築く。', type: 'custom' },
+    { char: '嶺', name: '嶺', desc: '斜めに何マスでも移動可能。移動時20%の確率で周囲に山駒を出現。', type: 'custom' },
+    { char: '峰', name: '峰', desc: '前前斜・前・左右・後移動可能。移動時に画数10画以上の敵駒を無効化。', type: 'custom' },
+    { char: '山', name: '山', desc: '前1マスのみ移動可能。嶺のスキルで出現する山の駒。', type: 'custom' },
+    { char: '岩', name: '岩', desc: '前後左右に1マス移動可能。移動時に周囲の味方駒を防御強化。', type: 'custom' },
+    { char: '鉱', name: '鉱', desc: '8方向に1マス移動可能。移動時20%の確率で味方の歩を金・銀・銅に変化。', type: 'custom' },
+    { char: '墓', name: '墓', desc: '前後左右に2マス移動可能。移動時に周囲の敵駒を墓場に送る（手駒に追加）。', type: 'custom' },
+    { char: '霊', name: '霊', desc: '斜め4方向に2マス移動可能。移動時に周囲の敵駒に憑依して行動不能にする。', type: 'custom' },
+    { char: '幻', name: '幻', desc: '縦横1マス＋桂馬横跳び。50％の確率で相手の駒に取られるのを回避。', type: 'custom' },
+    { char: '霧', name: '霧', desc: '斜め4方向＋左右1マス。周囲の敵駒を20％の確率で、相手の持ち駒に送る。', type: 'custom' },
+    { char: '終', name: '終', desc: '8方向に何マスでも移動可能。終焉の力を持つ。', type: 'custom' },
+    { char: '焉', name: '焉', desc: '8方向に1マス移動可能。終わりの力を持つ。', type: 'custom' },
+    { char: '月', name: '月', desc: 'ターン数で移動範囲が変化。月の満ち欠けの力を持つ。', type: 'custom' },
+    { char: '舟', name: '舟', desc: '縦横に何マスでも移動可能。後ろの味方駒を輸送できる。', type: 'custom' },
+    { char: '機', name: '機', desc: '8方向に1マス移動可能。隣の味方のスキルをコピーする。', type: 'custom' },
+    { char: '歯', name: '歯', desc: '斜め4方向に1マス移動可能。隣の駒と連動して動く。', type: 'custom' },
+    { char: '家', name: '家', desc: '固定駒。民駒を召喚する（最大5体）。', type: 'custom' },
+    { char: '民', name: '民', desc: '縦横1マス移動可能。畑があると斜め前も可能。', type: 'custom' },
+    { char: '畑', name: '畑', desc: '固定駒。盤面にあると民駒が斜め前にも移動可能。', type: 'custom' },
+    { char: '泉', name: '泉', desc: '縦横1マス移動可能。味方を強化し、竜を覚醒させる。', type: 'custom' },
+    { char: '辰', name: '辰', desc: '8方向に何マスでも移動可能。覚醒した竜の姿。', type: 'awakened' },
+    { char: 'K', name: 'K博士', desc: '8方向1マス移動。実験体を召喚。2回取られないと消えない。', type: 'boss' },
+    { char: '実', name: '実験体', desc: '縦横1マス移動。敵を異駒に変化させる。', type: 'boss' },
+    { char: '異', name: '変異体', desc: '8方向無限移動。変化前の駒の能力を継承する。', type: 'boss' }
+  ];
+  
+  const KEY = 'original_shogi_deck_v1';
+  const SAVES_KEY = 'original_shogi_deck_saves';
+  
+  let boardState = new Array(9).fill(null).map(() => new Array(9).fill(null));
+  let draggedPiece = null;
+  
+  // ステージクリア情報を読み込み
+  function loadClearedStages() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('original_shogi_cleared_stages') || '[]');
+      return Array.isArray(saved) ? saved : [];
+    } catch(e) {
+      console.error('ステージクリア情報の読み込みに失敗しました:', e);
+      return [];
+    }
+  }
+
+  // ステージに基づいて使用可能な駒を取得
+  function getAvailablePiecesForDeckBuilder() {
+    const clearedStages = loadClearedStages();
+    
+    // 基本駒（常に使用可能）
+    const basicPieces = ['香', '桂', '銀', '金', '玉', '飛', '角', '歩', '鏡', '映'];
+    
+    // ステージ別の追加駒
+    const stagePieces = {
+      1: [], // ステージ1: 基本駒のみ
+      2: ['忍', '影', '砲'], // ステージ2: 忍者系
+      3: ['忍', '影', '砲'], // ステージ3: 忍者系
+      4: ['忍', '影', '砲', '竜', '鳳'], // ステージ4: 竜鳳追加
+      5: ['忍', '影', '砲', '竜', '鳳', '炎', '火'], // ステージ5: 炎系
+      6: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波'], // ステージ6: 水系
+      7: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉'], // ステージ7: 木系
+      8: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星'], // ステージ8: 光系
+      9: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔'], // ステージ9: 闇系
+      10: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛'], // ステージ10: 金属系
+      11: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝'], // ステージ11: 宝
+      12: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷'], // ステージ12: 電気系
+      13: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時'], // ステージ13: 時
+      14: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪'], // ステージ14: 氷系
+      15: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風'], // ステージ15: 砂風系
+      16: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '苔', '魚'], // ステージ16: 苔系
+      17: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹'], // ステージ17: 雲虹系
+      18: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼'], // ステージ18: 毒の沼地系
+      19: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '幻', '霧'], // ステージ19: 幻霧系
+      20: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉'], // ステージ20: 終焉系
+      21: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵'], // ステージ21: 牢獄系
+      22: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山'], // ステージ22: 山系
+      23: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱'], // ステージ23: 岩鉱系
+      24: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱', '墓', '霊'], // ステージ24: 墓霊系
+      25: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱', '墓', '霊', '幻', '霧'], // ステージ25: 幻霧系
+      26: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱', '墓', '霊', '幻', '霧', '月', '舟'], // ステージ26: 月光系
+      27: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱', '墓', '霊', '幻', '霧', '月', '舟', '機', '歯'], // ステージ27: 機械系
+      28: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱', '墓', '霊', '幻', '霧', '月', '舟', '機', '歯', '家', '民', '畑'], // ステージ28: 秘境村系
+      29: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱', '墓', '霊', '幻', '霧', '月', '舟', '機', '歯', '家', '民', '畑', '泉'], // ステージ29: 竜の泉系
+      30: ['忍', '影', '砲', '竜', '鳳', '炎', '火', '水', '波', '木', '葉', '光', '星', '闇', '魔', '銅', '鉄', '錫', '鉛', '宝', '電', '雷', '時', '氷', '雪', '砂', '風', '海', '魚', '雲', '虹', '毒', '沼', '終', '焉', '牢', '柵', '嶺', '峰', '山', '岩', '鉱', '墓', '霊', '幻', '霧', '月', '舟', '機', '歯', '家', '民', '畑', '泉'] // ステージ30: K研究所系（ボス駒は除外）
+    };
+    
+    // 使用可能な駒を取得
+    let availablePieces = [...basicPieces];
+    
+    // クリア済みステージの駒を追加
+    for (let stage = 1; stage <= 30; stage++) {
+      if (clearedStages.includes(stage) && stagePieces[stage]) {
+        availablePieces = [...availablePieces, ...stagePieces[stage]];
+      }
+    }
+    
+    // 重複を除去
+    availablePieces = [...new Set(availablePieces)];
+    
+    // ボス駒と覚醒駒を除外（デッキでは使用不可）
+    const bossPieces = ALL_PIECES.filter(piece => piece.type === 'boss' || piece.type === 'awakened').map(piece => piece.char);
+    availablePieces = availablePieces.filter(piece => !bossPieces.includes(piece));
+    
+    console.log('デッキビルダーで使用可能な駒:', availablePieces);
+    console.log('除外されたボス駒・覚醒駒:', bossPieces);
+    return availablePieces;
+  }
+
+  // デッキビルダーのステージ情報を更新
+  function updateDeckBuilderStageInfo() {
+    const clearedStages = loadClearedStages();
+    const availablePieces = getAvailablePiecesForDeckBuilder();
+    const totalPieces = ALL_PIECES.length;
+    const availableCount = availablePieces.length;
+    
+    // ステージ情報を表示する要素を探すか作成
+    let stageInfoEl = document.getElementById('deck-builder-stage-info');
+    if (!stageInfoEl) {
+      stageInfoEl = document.createElement('div');
+      stageInfoEl.id = 'deck-builder-stage-info';
+      stageInfoEl.style.cssText = 'margin-top: 12px; font-size: 12px; color: #666; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 6px;';
+      
+      // パレットタイトルの後に挿入
+      const paletteTitle = document.querySelector('.palette-title');
+      if (paletteTitle && paletteTitle.parentNode) {
+        paletteTitle.parentNode.insertBefore(stageInfoEl, paletteTitle.nextSibling);
+      }
+    }
+    
+    let infoText = `クリア済みステージ: ${clearedStages.length} | 使用可能駒: ${availableCount}/${totalPieces}`;
+    if (clearedStages.length === 0) {
+      infoText += ' | ステージをクリアして新しい駒を解放しましょう！';
+    }
+    
+    stageInfoEl.textContent = infoText;
+  }
+  
+  function renderBoard() {
+    const board = document.getElementById('board-preview');
+    board.innerHTML = '';
+    
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        const cell = document.createElement('div');
+        cell.className = 'board-cell';
+        cell.dataset.row = row;
+        cell.dataset.col = col;
+        
+        // プレイヤー側（下3段）と相手側（上3段）を色分け
+        if (row >= 6) {
+          cell.classList.add('player');
+        } else if (row <= 2) {
+          cell.classList.add('opponent');
+        }
+        
+        // 駒が配置されている場合
+        if (boardState[row][col]) {
+          cell.classList.add('has-piece');
+          const piece = document.createElement('div');
+          piece.className = 'board-piece';
+          const pieceData = ALL_PIECES.find(p => p.char === boardState[row][col]);
+          if (pieceData && pieceData.type === 'custom') {
+            piece.classList.add('custom');
+          }
+          piece.textContent = boardState[row][col];
+          cell.appendChild(piece);
+        }
+        
+        // ドラッグ&ドロップイベント
+        cell.addEventListener('dragover', handleDragOver);
+        cell.addEventListener('drop', handleDrop);
+        cell.addEventListener('dragenter', handleDragEnter);
+        cell.addEventListener('dragleave', handleDragLeave);
+        cell.addEventListener('click', handleCellClick);
+        
+        board.appendChild(cell);
+      }
+    }
+  }
+  
+  function renderPieceGrid() {
+    const grid = document.getElementById('piece-grid');
+    grid.innerHTML = '';
+    
+    const availablePieces = getAvailablePiecesForDeckBuilder();
+    
+    // 重複を防ぐために、既に表示した駒を追跡
+    const displayedPieces = new Set();
+    
+    ALL_PIECES.forEach(piece => {
+      // 既に表示した駒はスキップ
+      if (displayedPieces.has(piece.char)) {
+        return;
+      }
+      displayedPieces.add(piece.char);
+      
+      const card = document.createElement('div');
+      card.className = `piece-card ${piece.type}`;
+      card.dataset.piece = piece.char;
+      
+      // ボス駒と覚醒駒は常にドラッグ不可
+      if (piece.type === 'boss') {
+        card.draggable = false;
+        card.title = 'この駒はボス駒のため、デッキでは使用できません';
+      } else if (piece.type === 'awakened') {
+        card.draggable = false;
+        card.title = 'この駒は覚醒駒のため、デッキでは使用できません（ゲーム中に覚醒します）';
+      } else {
+        card.draggable = availablePieces.includes(piece.char);
+        
+        // 使用できない駒はグレーアウト
+        if (!availablePieces.includes(piece.char)) {
+          card.style.opacity = '0.3';
+          card.style.filter = 'grayscale(1)';
+          card.style.cursor = 'not-allowed';
+          card.title = 'この駒はまだ使用できません（ステージをクリアしてください）';
+        }
+      }
+      
+      card.innerHTML = `
+        <div class="piece-char">${piece.char}</div>
+        <div class="piece-name">${piece.name}</div>
+        <div class="piece-desc">${piece.desc}</div>
+      `;
+      
+      // 使用可能な駒のみイベントリスナーを追加（ボス駒と覚醒駒は除外）
+      if (availablePieces.includes(piece.char) && piece.type !== 'boss' && piece.type !== 'awakened') {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+        card.addEventListener('mouseenter', () => showValidPositions(piece.char));
+        card.addEventListener('mouseleave', clearHighlights);
+      }
+      
+      grid.appendChild(card);
+    });
+    
+    // ステージ情報を表示
+    updateDeckBuilderStageInfo();
+  }
+  
+  function handleDragStart(e) {
+    draggedPiece = e.target.dataset.piece;
+    e.target.style.opacity = '0.5';
+  }
+  
+  function handleDragEnd(e) {
+    e.target.style.opacity = '1';
+    draggedPiece = null;
+  }
+  
+  function handleDragOver(e) {
+    e.preventDefault();
+  }
+  
+  function handleDragEnter(e) {
+    e.preventDefault();
+    e.target.classList.add('drag-over');
+  }
+  
+  function handleDragLeave(e) {
+    e.target.classList.remove('drag-over');
+  }
+  
+  function handleDrop(e) {
+    e.preventDefault();
+    e.target.classList.remove('drag-over');
+    
+    const row = parseInt(e.target.dataset.row);
+    const col = parseInt(e.target.dataset.col);
+    
+    // プレイヤー側（下3段）のみに配置可能
+    if (row >= 6 && draggedPiece) {
+      // 駒の配置制限をチェック
+      if (isValidPlacement(draggedPiece, row, col)) {
+        boardState[row][col] = draggedPiece;
+        renderBoard();
+        updateUI();
+      } else {
+        alert(`${draggedPiece}はこの場所に配置できません。`);
+      }
+    }
+  }
+  
+  // 駒の配置制限をチェック
+  function isValidPlacement(piece, row, col) {
+    // ボス駒は配置不可
+    const bossPiece = ALL_PIECES.find(p => p.char === piece);
+    if (bossPiece && bossPiece.type === 'boss') {
+      return false;
+    }
+    
+    // 角は(8,2)のみに配置可能
+    if (piece === '角') {
+      if (row !== 7 || col !== 1) { // 配列インデックスなので col 1 = 2列目
+        return false;
+      }
+    }
+    
+    // 歩は6行目に横一列に配置可能
+    if (piece === '歩') {
+      if (row !== 6) {
+        return false;
+      }
+      // 二歩のルール: 同じ列に他の歩がないかチェック
+      for (let checkRow = 6; checkRow < 9; checkRow++) {
+        if (checkRow !== row && boardState[checkRow][col] === '歩') {
+          return false;
+        }
+      }
+    }
+    
+    // 飛車は(8,8)のみに配置可能
+    if (piece === '飛') {
+      if (row !== 7 || col !== 7) { // 配列インデックスなので col 7 = 8列目
+        return false;
+      }
+    }
+    
+    // 王、玉は(8,5)のみに配置可能
+    if (piece === '王' || piece === '玉') {
+      if (row !== 8 || col !== 4) { // 配列インデックスなので col 4 = 5列目
+        return false;
+      }
+    }
+    
+    // 金は(8,4)、(8,6)のみに配置可能
+    if (piece === '金') {
+      if (row !== 8 || (col !== 3 && col !== 5)) { // 配列インデックスなので col 3 = 4列目、col 5 = 6列目
+        return false;
+      }
+    }
+    
+    // 銀は(8,3)、(8,7)のみに配置可能
+    if (piece === '銀') {
+      if (row !== 8 || (col !== 2 && col !== 6)) { // 配列インデックスなので col 2 = 3列目、col 6 = 7列目
+        return false;
+      }
+    }
+    
+    // 桂は(8,2)、(8,8)のみに配置可能
+    if (piece === '桂') {
+      if (row !== 8 || (col !== 1 && col !== 7)) { // 配列インデックスなので col 1 = 2列目、col 7 = 8列目
+        return false;
+      }
+    }
+    
+    // 香は(8,1)、(8,9)のみに配置可能
+    if (piece === '香') {
+      if (row !== 8 || (col !== 0 && col !== 8)) { // 配列インデックスなので col 0 = 1列目、col 8 = 9列目
+        return false;
+      }
+    }
+    
+    // 砲は(8,5)のみに配置可能
+    if (piece === '砲') {
+      if (row !== 7 || col !== 4) { // 配列インデックスなので col 4 = 5列目
+        return false;
+      }
+    }
+    
+    // 影は(8,3)、(8,7)のみに配置可能
+    if (piece === '影') {
+      if (row !== 8 || (col !== 2 && col !== 6)) { // 配列インデックスなので col 2 = 3列目、col 6 = 7列目
+        return false;
+      }
+    }
+    
+    // 忍は(8,2)、(8,8)のみに配置可能
+    if (piece === '忍') {
+      if (row !== 8 || (col !== 1 && col !== 7)) { // 配列インデックスなので col 1 = 2列目、col 7 = 8列目
+        return false;
+      }
+    }
+    
+    // 竜は(8,2)のみに配置可能
+    if (piece === '竜') {
+      if (row !== 7 || col !== 1) { // 配列インデックスなので col 1 = 2列目
+        return false;
+      }
+    }
+    
+    // 鳳は(8,8)のみに配置可能
+    if (piece === '鳳') {
+      if (row !== 7 || col !== 7) { // 配列インデックスなので col 7 = 8列目
+        return false;
+      }
+    }
+    
+    // 炎は(9,2)、(9,8)のみに配置可能
+    if (piece === '炎') {
+      if (row !== 8 || (col !== 1 && col !== 7)) { // 配列インデックスなので col 1 = 2列目、col 7 = 8列目
+        return false;
+      }
+    }
+    
+    // 火は(9,1)、(9,9)のみに配置可能
+    if (piece === '火') {
+      if (row !== 8 || (col !== 0 && col !== 8)) { // 配列インデックスなので col 0 = 1列目、col 8 = 9列目
+        return false;
+      }
+    }
+    
+    // 水は(9,1)、(9,9)のみに配置可能
+    if (piece === '水') {
+      if (row !== 8 || (col !== 0 && col !== 8)) { // 配列インデックスなので col 0 = 1列目、col 8 = 9列目
+        return false;
+      }
+    }
+    
+    // 波は(9,2)、(9,8)のみに配置可能
+    if (piece === '波') {
+      if (row !== 8 || (col !== 1 && col !== 7)) { // 配列インデックスなので col 1 = 2列目、col 7 = 8列目
+        return false;
+      }
+    }
+    
+    // 木は(9,1)、(9,9)のみに配置可能
+    if (piece === '木') {
+      if (row !== 8 || (col !== 0 && col !== 8)) { // 配列インデックスなので col 0 = 1列目、col 8 = 9列目
+        return false;
+      }
+    }
+    
+    // 葉は(9,2)、(9,8)のみに配置可能
+    if (piece === '葉') {
+      if (row !== 8 || (col !== 1 && col !== 7)) { // 配列インデックスなので col 1 = 2列目、col 7 = 8列目
+        return false;
+      }
+    }
+    
+    // 光は(9,2)、(9,8)にのみ配置可能
+    if (piece === '光') {
+      return (row === 8 && (col === 1 || col === 7));
+    }
+    
+    // 星は(9,2)、(9,8)にのみ配置可能
+    if (piece === '星') {
+      return (row === 8 && (col === 1 || col === 7));
+    }
+    
+    // 闇は(9,2)と(9,8)にのみ配置可能
+    if (piece === '闇') {
+      return (row === 8 && (col === 1 || col === 7));
+    }
+    
+    // 魔は(9,2)と(9,8)にのみ配置可能
+    if (piece === '魔') {
+      return (row === 8 && (col === 1 || col === 7));
+    }
+    
+    // 銅は(9,3)と(9,7)にのみ配置可能
+    if (piece === '銅') {
+      return (row === 8 && (col === 2 || col === 6));
+    }
+    
+    // 鉄は(9,3)と(9,7)にのみ配置可能
+    if (piece === '鉄') {
+      return (row === 8 && (col === 2 || col === 6));
+    }
+    
+    // 錫は(9,3)と(9,7)にのみ配置可能
+    if (piece === '錫') {
+      return (row === 8 && (col === 2 || col === 6));
+    }
+    
+    // 鉛は(9,3)と(9,7)にのみ配置可能
+    if (piece === '鉛') {
+      return (row === 8 && (col === 2 || col === 6));
+    }
+    
+    // 宝は(9,4)と(9,6)にのみ配置可能
+    if (piece === '宝') {
+      return (row === 8 && (col === 3 || col === 5));
+    }
+    
+    // 電は(8,2)にのみ配置可能
+    if (piece === '電') {
+      return (row === 7 && col === 1);
+    }
+    
+    // 雷は(8,8)にのみ配置可能
+    if (piece === '雷') {
+      return (row === 7 && col === 7);
+    }
+    
+    // 氷は(9,3)と(9,7)にのみ配置可能
+    if (piece === '氷') {
+      return (row === 8 && (col === 2 || col === 6));
+    }
+    
+    // 雪は(8,8)にのみ配置可能
+    if (piece === '雪') {
+      return (row === 7 && col === 7);
+    }
+    
+    // 砂は(7,1)～(7,9)にのみ配置可能
+    if (piece === '砂') {
+      return (row === 6);
+    }
+    
+    // 風は(8,8)にのみ配置可能
+    if (piece === '風') {
+      return (row === 7 && col === 7);
+    }
+    
+    // 苔は(9,3)と(9,7)にのみ配置可能
+    if (piece === '苔') {
+      return (row === 8 && (col === 2 || col === 6));
+    }
+    
+    // 魚は(8,5)にのみ配置可能
+    if (piece === '魚') {
+      return (row === 7 && col === 4);
+    }
+    
+    // 雲は(8,5)にのみ配置可能
+    if (piece === '雲') {
+      return (row === 7 && col === 4);
+    }
+    
+    // 虹は(8,2)と(8,8)にのみ配置可能
+    if (piece === '虹') {
+      return (row === 7 && (col === 1 || col === 7));
+    }
+    
+    // 毒は(9,2)と(9,8)にのみ配置可能
+    if (piece === '毒') {
+      return (row === 8 && (col === 1 || col === 7));
+    }
+    
+    // 沼は(9,3)、(9,7)、(8,5)にのみ配置可能
+    if (piece === '沼') {
+      return (row === 8 && (col === 2 || col === 6)) || (row === 7 && col === 4);
+    }
+    
+    // 鏡は(9,2)と(9,8)にのみ配置可能
+    if (piece === '鏡') {
+      return (row === 8 && (col === 1 || col === 7));
+    }
+    
+    // 映は(9,3)と(9,7)にのみ配置可能
+    if (piece === '映') {
+      return (row === 8 && (col === 2 || col === 6));
+    }
+    
+    return true;
+  }
+  
+  // 駒の有効な配置場所を表示
+  function showValidPositions(piece) {
+    // 既存のハイライトをクリア
+    clearHighlights();
+    
+    if (!piece) return;
+    
+    // 有効な場所をハイライト
+    for (let row = 6; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (isValidPlacement(piece, row, col)) {
+          const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+          if (cell) {
+            cell.classList.add('valid-position');
+          }
+        }
+      }
+    }
+  }
+  
+  // ハイライトをクリア
+  function clearHighlights() {
+    document.querySelectorAll('.valid-position').forEach(el => {
+      el.classList.remove('valid-position');
+    });
+  }
+  
+  function handleCellClick(e) {
+    const cell = e.target.closest('.board-cell');
+    if (!cell) return;
+    
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    
+    // プレイヤー側の駒のみ削除可能
+    if (row >= 6 && boardState[row][col]) {
+      boardState[row][col] = null;
+      renderBoard();
+      updateUI();
+    }
+  }
+  
+  function updateUI() {
+    renderDeckPreview();
+    updateStats();
+  }
+  
+  function renderDeckPreview() {
+    const preview = document.getElementById('deck-preview');
+    const empty = document.getElementById('empty-deck');
+    
+    // プレイヤー側の駒を取得（重複を除く）
+    const playerPieces = [];
+    for (let row = 6; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (boardState[row][col]) {
+          playerPieces.push(boardState[row][col]);
+        }
+      }
+    }
+    
+    const uniquePieces = [...new Set(playerPieces)];
+    
+    if (uniquePieces.length === 0) {
+      preview.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+    
+    preview.style.display = 'flex';
+    empty.style.display = 'none';
+    preview.innerHTML = '';
+    
+    uniquePieces.forEach(pieceChar => {
+      const piece = ALL_PIECES.find(p => p.char === pieceChar);
+      const pieceEl = document.createElement('div');
+      pieceEl.className = `deck-piece ${piece.type}`;
+      pieceEl.textContent = pieceChar;
+      preview.appendChild(pieceEl);
+    });
+  }
+  
+  function updateStats() {
+    let placedCount = 0;
+    for (let row = 6; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (boardState[row][col]) {
+          placedCount++;
+        }
+      }
+    }
+    document.getElementById('placed-count').textContent = placedCount;
+    
+    const playerPieces = [];
+    for (let row = 6; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (boardState[row][col]) {
+          playerPieces.push(boardState[row][col]);
+        }
+      }
+    }
+    
+    const uniquePieces = [...new Set(playerPieces)];
+    const customCount = uniquePieces.filter(p => 
+      ALL_PIECES.find(ap => ap.char === p)?.type === 'custom'
+    ).length;
+    document.getElementById('custom-count').textContent = customCount;
+  }
+  
+  function saveDeck() {
+    const playerPieces = [];
+    for (let row = 6; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (boardState[row][col]) {
+          playerPieces.push(boardState[row][col]);
+        }
+      }
+    }
+    
+    if (playerPieces.length === 0) {
+      alert('プレイヤー側に駒を配置してください');
+      return;
+    }
+    
+    const saveName = prompt('デッキの名前を入力してください:', `マイデッキ ${new Date().toLocaleDateString()}`);
+    if (!saveName) return;
+    
+    const saveData = {
+      name: saveName,
+      pieces: playerPieces, // 正確な配置を保存
+      boardConfig: boardState, // 完全な盤面配置も保存
+      date: new Date().toISOString(),
+      isCurrent: true
+    };
+    
+    // 現在のデッキとして保存
+    localStorage.setItem(KEY, JSON.stringify(playerPieces));
+    
+    // 保存履歴に追加
+    const saves = loadSaves();
+    saves.unshift(saveData);
+    if (saves.length > 10) saves.pop(); // 最大10個まで
+    localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+    
+    alert(`デッキ「${saveName}」を保存しました！`);
+    renderSaves();
+  }
+
+  function saveAsMyDeck() {
+    // プレイヤー側の駒の配置を取得
+    const playerBoardConfig = [];
+    for (let row = 6; row < 9; row++) {
+      const rowConfig = [];
+      for (let col = 0; col < 9; col++) {
+        rowConfig.push(boardState[row][col]);
+      }
+      playerBoardConfig.push(rowConfig);
+    }
+    
+    console.log('=== SAVE AS MY DECK DEBUG ===');
+    console.log('Current boardState:', boardState);
+    console.log('Player board config to save:', playerBoardConfig);
+    console.log('Config dimensions:', playerBoardConfig.length, 'x', playerBoardConfig[0].length);
+    
+    // 各行の詳細確認
+    console.log('=== 各行の詳細確認 ===');
+    console.log('6行目 (boardState[6]):', boardState[6]);
+    console.log('7行目 (boardState[7]):', boardState[7]);
+    console.log('8行目 (boardState[8]):', boardState[8]);
+    
+    // 電の位置を特別に確認
+    console.log('電の位置 (boardState[7][1]):', boardState[7][1]);
+    console.log('飛の位置 (boardState[7][7]):', boardState[7][7]);
+    
+    console.log('デッキ[0] (6行目):', playerBoardConfig[0]);
+    console.log('デッキ[1] (7行目):', playerBoardConfig[1]);
+    console.log('デッキ[2] (8行目):', playerBoardConfig[2]);
+    
+    // デフォルト配置との比較
+    console.log('=== デフォルト配置との比較 ===');
+    console.log('7行目2列目 (電の位置):', playerBoardConfig[1][1]);
+    console.log('7行目8列目 (飛の位置):', playerBoardConfig[1][7]);
+    console.log('8行目5列目 (玉の位置):', playerBoardConfig[2][4]);
+    
+    if (playerBoardConfig.flat().every(piece => !piece)) {
+      alert('プレイヤー側に駒を配置してください');
+      return;
+    }
+    
+    // (8,5)に駒があるかチェック
+    if (!boardState[8][4]) { // 配列インデックスなので row 8, col 4 = (8,5)
+      alert('(8,5)に駒を配置してください。マイデッキには必ず(8,5)に駒が必要です。');
+      return;
+    }
+    
+    // マイデッキとして保存（ゲームで使用される初期配置）
+    localStorage.setItem(KEY, JSON.stringify(playerBoardConfig));
+    
+    console.log('Saved to localStorage with key:', KEY);
+    console.log('Saved value:', JSON.stringify(playerBoardConfig));
+    console.log('=== END SAVE DEBUG ===');
+    
+    alert('マイデッキとして保存しました！これで各ステージの初期配置がこのデッキになります。');
+    
+    // 保存後の確認
+    console.log('=== 保存後の確認 ===');
+    const saved = JSON.parse(localStorage.getItem(KEY) || '[]');
+    console.log('保存されたデッキ:', saved);
+    if (Array.isArray(saved) && saved.length > 0) {
+      console.log('デッキの行数:', saved.length);
+      console.log('デッキ[0] (6行目):', saved[0]);
+      console.log('デッキ[1] (7行目):', saved[1]);
+      console.log('デッキ[2] (8行目):', saved[2]);
+      
+      // 保存されたデッキと現在の盤面の比較
+      console.log('=== 保存されたデッキと現在の盤面の比較 ===');
+      console.log('現在の盤面6行目 vs デッキ[0]:', boardState[6], 'vs', saved[0]);
+      console.log('現在の盤面7行目 vs デッキ[1]:', boardState[7], 'vs', saved[1]);
+      console.log('現在の盤面8行目 vs デッキ[2]:', boardState[8], 'vs', saved[2]);
+    }
+  }
+  
+  function loadSaves() {
+    try {
+      const saves = JSON.parse(localStorage.getItem(SAVES_KEY) || '[]');
+      return Array.isArray(saves) ? saves : [];
+    } catch(e) {
+      return [];
+    }
+  }
+  
+  function renderSaves() {
+    const savesContainer = document.getElementById('deck-saves');
+    const saves = loadSaves();
+    
+    if (saves.length === 0) {
+      savesContainer.innerHTML = '<p style="color:#999;text-align:center;">保存されたデッキがありません</p>';
+      return;
+    }
+    
+    savesContainer.innerHTML = '';
+    saves.forEach((save, index) => {
+      const saveEl = document.createElement('div');
+      saveEl.className = 'save-item';
+      
+      const date = new Date(save.date).toLocaleDateString();
+      const pieceCount = save.pieces ? save.pieces.length : 0;
+      saveEl.innerHTML = `
+        <div>
+          <div class="save-name">${save.name}</div>
+          <div class="save-date">${date} - ${pieceCount}個の駒</div>
+        </div>
+        <div class="save-actions">
+          <button onclick="loadSave(${index})" class="success">読み込み</button>
+          <button onclick="deleteSave(${index})" class="secondary">削除</button>
+        </div>
+      `;
+      savesContainer.appendChild(saveEl);
+    });
+  }
+  
+  function loadSave(index) {
+    const saves = loadSaves();
+    if (saves[index]) {
+      // 盤面をクリア
+      boardState = new Array(9).fill(null).map(() => new Array(9).fill(null));
+      
+      // 保存された盤面配置がある場合はそれを使用
+      if (saves[index].boardConfig) {
+        boardState = saves[index].boardConfig;
+      } else {
+        // 後方互換性のため、古い形式の場合はデフォルト配置を設定
+        const deckPieces = saves[index].pieces;
+        const defaultPieces = ['香', '桂', '銀', '金', '玉', '金', '銀', '桂', '香'];
+        
+        // 1段目（最下段）
+        for (let col = 0; col < 9; col++) {
+          const pieceIndex = col % deckPieces.length;
+          boardState[8][col] = deckPieces[pieceIndex];
+        }
+        
+        // 2段目（歩の段）
+        for (let col = 0; col < 9; col++) {
+          const pieceIndex = 1 % deckPieces.length;
+          boardState[7][col] = deckPieces[pieceIndex];
+        }
+      }
+      
+      renderBoard();
+      updateUI();
+      alert(`デッキ「${saves[index].name}」を読み込みました`);
+    }
+  }
+  
+  function deleteSave(index) {
+    if (!confirm('このデッキを削除しますか？')) return;
+    
+    const saves = loadSaves();
+    saves.splice(index, 1);
+    localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+    renderSaves();
+  }
+  
+  function clearBoard() {
+    if (!confirm('盤面をクリアしますか？')) return;
+    boardState = new Array(9).fill(null).map(() => new Array(9).fill(null));
+    renderBoard();
+    updateUI();
+  }
+  
+  function loadDefaultDeck() {
+    boardState = new Array(9).fill(null).map(() => new Array(9).fill(null));
+    
+    // デフォルト配置を設定
+    const defaultPieces = ['香', '桂', '銀', '金', '玉', '金', '銀', '桂', '香'];
+    
+    // 1段目（最下段）
+    for (let col = 0; col < 9; col++) {
+      boardState[8][col] = defaultPieces[col];
+    }
+    
+    // 2段目（歩の段）
+    for (let col = 0; col < 9; col++) {
+      boardState[7][col] = '歩';
+    }
+    
+    renderBoard();
+    updateUI();
+    alert('デフォルト配置を復元しました');
+  }
+  
+  function testDeck() {
+    const playerPieces = [];
+    for (let row = 6; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (boardState[row][col]) {
+          playerPieces.push(boardState[row][col]);
+        }
+      }
+    }
+    
+    const uniquePieces = [...new Set(playerPieces)];
+    if (uniquePieces.length === 0) {
+      alert('プレイヤー側に駒を配置してください');
+      return;
+    }
+    
+    saveDeck();
+    window.open('stage_shogi.html?stage=1', '_blank');
+  }
+  
+  function exportDeck() {
+    const playerPieces = [];
+    for (let row = 6; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (boardState[row][col]) {
+          playerPieces.push(boardState[row][col]);
+        }
+      }
+    }
+    
+    const uniquePieces = [...new Set(playerPieces)];
+    if (uniquePieces.length === 0) {
+      alert('プレイヤー側に駒を配置してください');
+      return;
+    }
+    
+    const exportData = {
+      pieces: uniquePieces,
+      date: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(exportData);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `shogi_deck_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+  }
+  
+  function importDeck() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.pieces && Array.isArray(data.pieces)) {
+            // 盤面をクリア
+            boardState = new Array(9).fill(null).map(() => new Array(9).fill(null));
+            
+            const deckPieces = data.pieces.slice(0, 9); // 最大9個まで
+            
+            // 1段目（最下段）
+            for (let col = 0; col < 9; col++) {
+              const pieceIndex = col % deckPieces.length;
+              boardState[8][col] = deckPieces[pieceIndex];
+            }
+            
+            // 2段目（歩の段）
+            for (let col = 0; col < 9; col++) {
+              const pieceIndex = 1 % deckPieces.length;
+              boardState[7][col] = deckPieces[pieceIndex];
+            }
+            
+            renderBoard();
+            updateUI();
+            alert('デッキをインポートしました');
+          } else {
+            alert('無効なデッキファイルです');
+          }
+        } catch(e) {
+          alert('ファイルの読み込みに失敗しました');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+  
+  // 初期化
+  function init() {
+    // 空の盤面で開始
+    boardState = new Array(9).fill(null).map(() => new Array(9).fill(null));
+    
+    // 保存されたデッキがあるかチェック
+    const savedDeck = JSON.parse(localStorage.getItem(KEY) || '[]');
+    console.log('保存されたデッキ:', savedDeck);
+    
+    if (Array.isArray(savedDeck) && savedDeck.length > 0) {
+      console.log('保存されたデッキを読み込みます');
+      // 保存されたデッキを読み込み
+      for (let row = 0; row < savedDeck.length && row < 3; row++) {
+        for (let col = 0; col < savedDeck[row].length && col < 9; col++) {
+          const boardRow = row + 6; // 6, 7, 8行目に配置
+          boardState[boardRow][col] = savedDeck[row][col];
+        }
+      }
+    } else {
+      console.log('デフォルト配置を設定します');
+      // デフォルト配置を設定
+      // 7行目（歩の段）- 電と飛の位置を除く
+      boardState[7][0] = '歩';
+      boardState[7][1] = '電'; // 7行目2列目
+      boardState[7][2] = '歩';
+      boardState[7][3] = '歩';
+      boardState[7][4] = '歩';
+      boardState[7][5] = '歩';
+      boardState[7][6] = '歩';
+      boardState[7][7] = '飛'; // 7行目8列目
+      boardState[7][8] = '歩';
+      
+      // 8行目（最下段）
+      boardState[8][0] = '香';
+      boardState[8][1] = '桂';
+      boardState[8][2] = '銀';
+      boardState[8][3] = '金';
+      boardState[8][4] = '玉';
+      boardState[8][5] = '金';
+      boardState[8][6] = '銀';
+      boardState[8][7] = '桂';
+      boardState[8][8] = '香';
+    }
+    
+    console.log('=== INIT DEBUG ===');
+    console.log('初期化後の盤面状態:');
+    console.log('6行目:', boardState[6]);
+    console.log('7行目:', boardState[7]);
+    console.log('8行目:', boardState[8]);
+    console.log('電の位置 (boardState[7][1]):', boardState[7][1]);
+    console.log('飛の位置 (boardState[7][7]):', boardState[7][7]);
+    console.log('=== END INIT DEBUG ===');
+    
+    renderBoard();
+    renderPieceGrid();
+    updateUI();
+    renderSaves();
+  }
+  
+  // テスト機能を追加
+  function testDeckSave() {
+    console.log('=== TEST DECK SAVE ===');
+    
+    // 現在の盤面状態を確認
+    console.log('現在の盤面状態:');
+    console.log('6行目:', boardState[6]);
+    console.log('7行目:', boardState[7]);
+    console.log('8行目:', boardState[8]);
+    
+    // 電の位置を特別に確認
+    console.log('電の位置 (boardState[7][1]):', boardState[7][1]);
+    console.log('飛の位置 (boardState[7][7]):', boardState[7][7]);
+    
+    // 保存処理を実行
+    saveAsMyDeck();
+    
+    // 保存されたデータを確認
+    const saved = JSON.parse(localStorage.getItem(KEY) || '[]');
+    console.log('保存されたデータ:', saved);
+    
+    console.log('=== END TEST ===');
+  }
+  
+  // 保存されたデッキをクリアする機能
+  function clearSavedDeck() {
+    localStorage.removeItem(KEY);
+    localStorage.removeItem('original_shogi_deck_info');
+    console.log('保存されたデッキをクリアしました');
+    alert('保存されたデッキをクリアしました。ページを再読み込みしてください。');
+  }
+  
+  init();
+</script>
+</body>
+</html> 

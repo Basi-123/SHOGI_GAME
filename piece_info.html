@@ -1,0 +1,594 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title id="page-title">駒情報</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#D97706",
+            "background-light": "#F9FAFB",
+            "background-dark": "#1F2937",
+          },
+          fontFamily: {
+            display: ["Noto Sans JP", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+          },
+        },
+      },
+    };
+  </script>
+<style>
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    /* 駒の五角形にグラデーションとエフェクトを追加 */
+    .piece-shape {
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      transition: all 0.3s ease;
+    }
+    
+    .piece-shape:hover {
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
+      transform: scale(1.05);
+    }
+    
+    .piece-shape path {
+      transition: all 0.3s ease;
+    }
+    
+    /* 駒の文字にエフェクト */
+    .piece-char-display {
+      position: relative;
+      --glow-color: rgba(217, 119, 6, 0.6);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      animation: pieceGlow 2s ease-in-out infinite;
+    }
+    
+    @keyframes pieceGlow {
+      0%, 100% {
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2), 0 0 10px var(--glow-color);
+      }
+      50% {
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2), 0 0 25px var(--glow-color), 0 0 35px var(--glow-color);
+      }
+    }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100">
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+<header class="mb-8 flex justify-between items-center">
+<h1 class="text-4xl font-bold text-gray-800 dark:text-white" id="piece-title">駒情報</h1>
+<a href="home.html" class="text-primary hover:text-primary/80 font-semibold">← ホームへ戻る</a>
+    </header>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="space-y-8">
+<div class="flex items-center space-x-6">
+<div class="relative w-48 h-48 flex items-center justify-center piece-shape">
+<svg class="absolute w-full h-full" viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="pieceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+<stop offset="0%" style="stop-color:#f5e6d3;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#d4a574;stop-opacity:1" />
+</linearGradient>
+</defs>
+<path fill="url(#pieceGradient)" stroke="#8b6f47" stroke-width="2" d="M50 5 L95 40 L95 105 L5 105 L5 40 Z"></path>
+</svg>
+<span class="relative text-6xl font-bold text-gray-900 dark:text-gray-100 piece-char-display" id="piece-char">駒</span>
+</div>
+<div class="space-y-2">
+<div>
+<span class="text-sm text-gray-500 dark:text-gray-400">名前</span>
+<p class="text-2xl font-semibold text-gray-800 dark:text-white" id="piece-name">-</p>
+</div>
+<div>
+<span class="text-sm text-gray-500 dark:text-gray-400">解放条件</span>
+<p class="text-lg font-semibold text-gray-800 dark:text-white" id="piece-unlock">-</p>
+</div>
+</div>
+</div>
+
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+<h2 class="text-2xl font-bold mb-4 text-primary">駒の説明</h2>
+<p class="text-gray-700 dark:text-gray-300 leading-relaxed" id="piece-description">
+            駒の説明がここに表示されます。
+          </p>
+</div>
+
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+<h2 class="text-2xl font-bold mb-4 text-primary">スキルの説明</h2>
+<p class="text-gray-700 dark:text-gray-300 leading-relaxed" id="piece-skill">
+            スキルの説明がここに表示されます。
+          </p>
+</div>
+</div>
+
+<div class="space-y-8">
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+<h2 class="text-2xl font-bold mb-4 text-primary">行動範囲</h2>
+<div class="grid grid-cols-7 gap-1 mx-auto w-fit border border-gray-300 dark:border-gray-600 p-2 rounded-md" id="movement-grid">
+</div>
+<div class="mt-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-md">
+<h3 class="font-semibold text-lg mb-2 text-gray-800 dark:text-gray-200">行動範囲の説明</h3>
+<p class="text-gray-600 dark:text-gray-400" id="movement-description">
+              行動範囲の説明がここに表示されます。
+            </p>
+</div>
+</div>
+</div>
+</div>
+
+<div class="mt-12 text-center">
+<h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">他の駒を見る</h2>
+<div class="flex justify-center items-center space-x-4">
+<button onclick="previousPiece()" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold p-3 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4" id="other-pieces">
+</div>
+<button onclick="nextPiece()" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold p-3 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+  </div>
+
+<script>
+const ALL_PIECES_DATA = [
+  // 初期駒
+  { char: '歩', name: '歩兵', unlock: '初期', desc: '将棋の基本となる駒。前進するのみの単純な動きだが、数が多く重要な役割を果たす。', skill: 'なし', move: 'pawn' },
+  { char: '香', name: '香車', unlock: '初期', desc: '「槍」とも呼ばれる駒。直線的な攻撃力を持ち、遠くまで射程が届く。', skill: 'なし', move: 'lance' },
+  { char: '桂', name: '桂馬', unlock: '初期', desc: '特殊な動きを持つ駒。普通駒の中では、他の駒を飛び越えて移動できる唯一の駒。', skill: 'なし', move: 'knight' },
+  { char: '銀', name: '銀将', unlock: '初期', desc: '防御力に優れた普通駒。', skill: 'なし', move: 'silver' },
+  { char: '金', name: '金将', unlock: '初期', desc: '守備に優れた駒。王将を守る重要な役割を持つ。', skill: 'なし', move: 'gold' },
+  { char: '角', name: '角行', unlock: '初期', desc: '斜め方向に無限に進める強力な駒。遠距離攻撃が得意。', skill: 'なし', move: 'bishop' },
+  { char: '飛', name: '飛車', unlock: '初期', desc: '縦横方向に無限に進める普通駒の中では最強クラスの駒。攻撃力が非常に高い。', skill: 'なし', move: 'rook' },
+  { char: '玉', name: '玉将', unlock: '初期', desc: '最も重要な駒。この駒を取られると負けとなる。', skill: 'なし', move: 'king' },
+  
+  // Stage 2
+  { char: '忍', name: '忍者', unlock: 'Stage 2', desc: '忍者の素早さを持つ特殊な駒。機動力に優れる。', skill: 'なし', move: 'ninja' },
+  { char: '影', name: '影武者', unlock: 'Stage 2', desc: '影のように動く特殊な駒。斜め方向に強い。', skill: 'なし', move: 'shadow' },
+  { char: '砲', name: '砲台', unlock: 'Stage 2', desc: '中国将棋の駒を応用した特殊な駒。駒を飛び越えて取ることができる。', skill: '駒を1つまたいで取ることができます。', move: 'cannon' },
+  
+  // Stage 4
+  { char: '竜', name: '小竜', unlock: 'Stage 4', desc: '竜の力を宿す駒。斜め方向に強力な攻撃力を持つ。', skill: '「泉」駒によって覚醒し、「辰」に変身することができます。', move: 'dragon' },
+  { char: '鳳', name: '鳳凰', unlock: 'Stage 4', desc: '伝説の鳥、鳳凰の力を持つ駒。縦横方向に強い。', skill: 'なし', move: 'phoenix' },
+  
+  // Stage 5
+  { char: '炎', name: '炎魔', unlock: 'Stage 5', desc: '炎の力を操る駒。あらゆるものを燃やすことができます。', skill: '10%の確率で周囲の敵駒を消滅させる。', move: 'flame' },
+  { char: '火', name: '火神', unlock: 'Stage 5', desc: '火の神の力を持つ駒。火を操ることができます。', skill: '火の壁効果を持つ。', move: 'fire' },
+  
+  // Stage 6
+  { char: '水', name: '水神', unlock: 'Stage 6', desc: '水の神の力を持つ駒。流れるような動きが特徴です。', skill: '水の流れ効果を持つ。', move: 'water' },
+  { char: '波', name: '波使', unlock: 'Stage 6', desc: '波を操る駒。十字方向に波のように移動します。', skill: '波の伝播効果により周囲の敵駒を押し流す。', move: 'wave' },
+  
+  // Stage 7
+  { char: '木', name: '樹木', unlock: 'Stage 7', desc: '大地に根を張る木の力を持つ駒。成長する力があります。', skill: '木の成長効果により周囲に「木」駒を召喚する。', move: 'tree' },
+  { char: '葉', name: '大葉', unlock: 'Stage 7', desc: '風に舞う葉のような駒。軽やかな動きが特徴です。', skill: '葉の舞い散り効果を持つ。', move: 'leaf' },
+  
+  // Stage 8
+  { char: '光', name: '光神', unlock: 'Stage 8', desc: '光の神の力を持つ駒。壁で反射する特殊な能力がある。', skill: '壁で反射して継続移動できる。', move: 'light' },
+  { char: '星', name: '星使', unlock: 'Stage 8', desc: '星の軌道を操る駒。十字方向に無限の射程を持つ。', skill: '星の軌道効果を持ちます。', move: 'star' },
+  
+  // Stage 9
+  { char: '闇', name: '闇神', unlock: 'Stage 9', desc: '闇の神の力を持つ駒。敵を闇で覆う能力がある。', skill: '周囲の敵駒を次の番まで闇で覆う。', move: 'dark' },
+  { char: '魔', name: '悪魔', unlock: 'Stage 9', desc: '悪魔の力を持つ駒。敵を消滅させる恐ろしい能力がある。', skill: '周囲の敵駒を10%で消滅させる。', move: 'demon' },
+  
+  // Stage 10
+  { char: '銅', name: '銅鉱石', unlock: 'Stage 10', desc: '銅の鉱石を象徴する駒。導電性の特性を持つ。', skill: 'なし', move: 'copper' },
+  { char: '鉄', name: '鉄鉱石', unlock: 'Stage 10', desc: '鉄の鉱石を象徴する駒。磁力の特性を持つ。', skill: '磁力効果により周囲の敵駒を遠ざける。', move: 'iron' },
+  { char: '錫', name: '錫鉱石', unlock: 'Stage 10', desc: '錫の鉱石を象徴する駒。柔軟性の特性を持つ。', skill: '錫の柔軟効果により周囲の敵駒を行動不能にする。', move: 'tin' },
+  { char: '鉛', name: '鉛鉱石', unlock: 'Stage 10', desc: '鉛の鉱石を象徴する駒。重さの特性を持つ。', skill: 'なし', move: 'lead' },
+  
+  // Stage 11
+  { char: '宝', name: '宝', unlock: 'Stage 11', desc: '宝物を象徴する駒。宝の発掘をする。', skill: '20%の確率で金・銀・銅を獲得する。', move: 'treasure' },
+  
+  // Stage 12
+  { char: '電', name: '電気', unlock: 'Stage 12', desc: '電気の力を持つ駒。敵を痺れさせることができる。', skill: '20%の確率で敵を感電させ1ターン動けなくさせる。', move: 'electric' },
+  { char: '雷', name: '雷', unlock: 'Stage 12', desc: '雷の力を持つ駒。敵を感電させ、消滅させることができる。', skill: '10%の確率で相手の持ち駒を消滅させる。', move: 'thunder' },
+  
+  // Stage 13
+  { char: '時', name: '時', unlock: 'Stage 13', desc: '時間を操る神秘的な駒。', skill: '時停止により周囲の敵駒を2ターン行動不能にする。', move: 'time' },
+  
+  // Stage 14
+  { char: '氷', name: '氷', unlock: 'Stage 14', desc: '氷の力を持つ駒。敵を凍らせることができる。', skill: '周囲の敵を凍らせ2ターン動けなくする。', move: 'ice' },
+  { char: '雪', name: '雪', unlock: 'Stage 14', desc: '雪のように舞う駒。移動時に氷駒を獲得できる', skill: '移動時20%の確率で持ち駒に「氷」を1つ獲得する。', move: 'snow' },
+  
+  // Stage 15
+  { char: '砂', name: '砂', unlock: 'Stage 15', desc: '砂の力を持つ駒。砂のようにまとまって移動する。', skill: '左右の「砂」駒と連携移動する。', move: 'sand' },
+  { char: '風', name: '風', unlock: 'Stage 15', desc: '風のように自由に移動する駒。', skill: '周囲の駒を押し流す。', move: 'wind' },
+  
+  // Stage 16
+  { char: '苔', name: '苔', unlock: 'Stage 16', desc: '苔のように広がる駒。じわじわと領域を広げる。', skill: '移動時増殖する。', move: 'moss' },
+  { char: '魚', name: '魚', unlock: 'Stage 16', desc: '水中を泳ぐ魚の駒。敵を引きずり込む。', skill: '30%の確率で敵を溺れさせ1ターン動けなくする。', move: 'fish' },
+  
+  // Stage 17
+  { char: '雲', name: '雲', unlock: 'Stage 17', desc: '雲のように自由に移動する駒。味方の輸送をする。', skill: '8方向に何マスでも移動。相手の駒は取れないが味方の駒を取れる。', move: 'cloud' },
+  { char: '虹', name: '虹', unlock: 'Stage 17', desc: '虹の力を持つ駒。敵の移動範囲を制限できる。', skill: '縦横に1マス移動。敵の移動範囲を1ターン縦横1マスに制限する。', move: 'rainbow' },
+  
+  // Stage 18
+  { char: '毒', name: '毒', unlock: 'Stage 18', desc: '毒の力を持つ駒。周囲に毒を振りまく。', skill: '通ったマスを2ターン毒マスにする。', move: 'poison' },
+  { char: '沼', name: '沼', unlock: 'Stage 18', desc: '沼の力を持つ駒。敵を沼に沈める。', skill: '周囲の敵駒を沼に沈め、行動範囲を上下1マスのみにする。', move: 'swamp' },
+  
+  // Stage 19
+  { char: '鏡', name: '鏡', unlock: 'Stage 19', desc: '鏡の力を持つ駒。敵の動きをコピーできる。', skill: '正面の敵駒の動きをコピーする。', move: 'mirror' },
+  { char: '映', name: '映', unlock: 'Stage 19', desc: '映像の力を持つ駒。敵の動きをコピーできる。', skill: '正面の敵駒の動きをコピーする。', move: 'film' },
+  
+  // Stage 20
+  { char: 'あ', name: 'あ', unlock: 'Stage 20', desc: 'ボス駒。亜空間の創造主。強大な力を秘めている。', skill: '周囲の敵駒を「歩」に変化させる。', move: 'ah' },
+  
+  // Stage 21
+  { char: '牢', name: '牢', unlock: 'Stage 21', desc: '牢獄の力を持つ駒。あらゆる者を監禁する。', skill: '移動時敵駒を1つランダムに2ターン行動不能にする。', move: 'prison' },
+  { char: '柵', name: '柵', unlock: 'Stage 21', desc: '柵の力を持つ駒。あらゆる者を囲む。', skill: '移動時敵駒を1つランダムに2ターン行動不能にする。', move: 'fence' },
+  
+  // Stage 22
+  { char: '嶺', name: '嶺', unlock: 'Stage 22', desc: '山嶺の力を持つ駒。山の神の能力を持つ。', skill: '移動時20%の確率で周囲に山駒を出現させる。', move: 'ridge' },
+  { char: '峰', name: '峰', unlock: 'Stage 22', desc: '山峰の力を持つ駒。山の神の能力を持つ。', skill: '画数が10画以上の敵駒を無効化する。', move: 'peak' },
+  
+  // Stage 23
+  { char: '岩', name: '岩', unlock: 'Stage 23', desc: '岩の力を持つ駒。ゴツゴツした岩を操る。', skill: '移動時左右に岩の障害物を配置する。', move: 'rock' },
+  { char: '鉱', name: '鉱', unlock: 'Stage 23', desc: '鉱石の力を持つ駒。あらゆる鉱石を発掘する。', skill: '20%の確率で味方の「歩」を「金」・「銀」・「銅」に変化させる。', move: 'ore' },
+  
+  // Stage 24
+  { char: '墓', name: '墓', unlock: 'Stage 24', desc: '墓の力を持つ駒。亡霊を味方につけている。', skill: '移動時20％の確率で周囲の空いているマスに「霊」を召喚する。', move: 'grave' },
+  { char: '霊', name: '霊', unlock: 'Stage 24', desc: '霊の力を持つ駒。実体がない。', skill: '相手に取られても相手の持ち駒に加わらない。', move: 'spirit' },
+  
+  // Stage 25
+  { char: '幻', name: '幻', unlock: 'Stage 25', desc: '幻のような駒。実体を掴むことができない。', skill: '50％の確率で相手の駒に取られるのを回避する。', move: 'phantom' },
+  { char: '霧', name: '霧', unlock: 'Stage 25', desc: '霧の力を持つ駒。霧の中に敵を連れ込む。', skill: '周囲の敵駒を20％の確率で相手の持ち駒に送る。', move: 'mist' },
+  
+  // Stage 26
+  { char: '月', name: '月', unlock: 'Stage 26', desc: '月の力を持つ駒。月が出る時間帯に能力を発揮する。', skill: 'ターンごとに移動能力が変化する。', move: 'moon' },
+  { char: '舟', name: '舟', unlock: 'Stage 26', desc: '水上を自由に航行する駒。優秀な移動手段。', skill: '移動時後ろにいる味方駒を連れていく。', move: 'boat' },
+  
+  // Stage 27
+  { char: '機', name: '機', unlock: 'Stage 27', desc: '機械の力を持つ駒。あらゆる物に姿を変える。', skill: '左または右隣りの見方駒のスキルをコピーする。', move: 'machine' },
+  { char: '歯', name: '歯', unlock: 'Stage 27', desc: '歯車の力を持つ駒。周りと噛み合って動く', skill: '隣接する駒が動いたらそれに連動して動く。', move: 'gear' },
+  
+  // Stage 28
+  { char: '家', name: '家', unlock: 'Stage 28', desc: '固定駒。民の安寧の場所。', skill: '「民」駒を自陣4行のランダムな場所に召喚(召喚制限は5体)。', move: 'house' },
+  { char: '民', name: '民', unlock: 'Stage 28', desc: '家に住む。', skill: '「畑」があると斜め前も移動可能となる。', move: 'people' },
+  { char: '畑', name: '畑', unlock: 'Stage 28', desc: '固定駒。大地の恵みを持たらす。', skill: '盤面にあることで民駒が斜め前にも移動可能にする。', move: 'field' },
+  
+  // Stage 29
+  { char: '泉', name: '泉', unlock: 'Stage 29', desc: '清らかな水の力を持つ駒。あらゆる者に恵みをもたらす。', skill: 'ランダムな味方駒を強化し相手駒から取られないようにする(5ターン持続)。味方の「竜」を覚醒させる。', move: 'spring' },
+  { char: '辰', name: '辰', unlock: 'Stage 29', desc: '泉の恵みにより竜が覚醒した状態。真の竜の力を解放した姿。', skill: '移動時10%の確率で周囲8マスの敵駒をランダムに1つ消滅させる。', move: 'dragonAwakened' },
+  
+  // Stage 30
+  { char: 'K', name: 'K博士', unlock: 'Stage 30', desc: '邪悪な実験を営む科学者。', skill: '40%で実験体を召喚。2回取られないと消えない。', move: 'k' },
+  { char: '実', name: '実験体', unlock: 'Stage 30', desc: 'K博士の実験により生み出された。', skill: '敵駒を「異」に変化させる。', move: 'experiment' },
+  { char: '異', name: '変異体', unlock: 'Stage 30', desc: 'K博士の実験の失敗作。', skill: '変化前の駒の能力を継承する。', move: 'mutant' },
+];
+
+let currentPieceIndex = 0;
+let currentPage = 0;
+const PIECES_PER_PAGE = 6;
+
+function getPieceFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const pieceChar = params.get('piece');
+  if (pieceChar) {
+    const index = ALL_PIECES_DATA.findIndex(p => p.char === pieceChar);
+    if (index !== -1) currentPieceIndex = index;
+  }
+}
+
+function displayPiece(index) {
+  const piece = ALL_PIECES_DATA[index];
+  if (!piece) return;
+  
+  document.getElementById('piece-title').textContent = `駒情報「${piece.char}」`;
+  document.getElementById('page-title').textContent = `駒情報「${piece.char}」`;
+  document.getElementById('piece-char').textContent = piece.char;
+  document.getElementById('piece-name').textContent = piece.name;
+  document.getElementById('piece-unlock').textContent = piece.unlock;
+  document.getElementById('piece-description').textContent = piece.desc;
+  document.getElementById('piece-skill').textContent = piece.skill;
+  
+  // 駒に応じた色とエフェクトを適用
+  updatePieceColor(piece.char);
+  
+  displayMovementGrid(piece.move, piece.char);
+  displayMovementDescription(piece.move);
+  displayOtherPieces();
+  
+  const url = new URL(window.location);
+  url.searchParams.set('piece', piece.char);
+  window.history.pushState({}, '', url);
+}
+
+function updatePieceColor(pieceChar) {
+  // 駒ごとの色定義
+  const pieceColors = {
+    // 基本駒（木の色）
+    '歩': { gradient: ['#f5e6d3', '#d4a574'], stroke: '#8b6f47', glow: 'rgba(139, 111, 71, 0.6)' },
+    '香': { gradient: ['#f5e6d3', '#d4a574'], stroke: '#8b6f47', glow: 'rgba(139, 111, 71, 0.6)' },
+    '桂': { gradient: ['#f5e6d3', '#d4a574'], stroke: '#8b6f47', glow: 'rgba(139, 111, 71, 0.6)' },
+    '銀': { gradient: ['#e8e8e8', '#c0c0c0'], stroke: '#808080', glow: 'rgba(192, 192, 192, 0.8)' },
+    '金': { gradient: ['#ffd700', '#ffb700'], stroke: '#b8860b', glow: 'rgba(255, 215, 0, 0.8)' },
+    '角': { gradient: ['#f5e6d3', '#d4a574'], stroke: '#8b6f47', glow: 'rgba(139, 111, 71, 0.6)' },
+    '飛': { gradient: ['#f5e6d3', '#d4a574'], stroke: '#8b6f47', glow: 'rgba(139, 111, 71, 0.6)' },
+    '玉': { gradient: ['#ffd700', '#ffb700'], stroke: '#b8860b', glow: 'rgba(255, 215, 0, 0.8)' },
+    
+    // 特殊駒
+    '忍': { gradient: ['#2c3e50', '#1a252f'], stroke: '#000000', glow: 'rgba(44, 62, 80, 0.8)' },
+    '影': { gradient: ['#4a5568', '#2d3748'], stroke: '#1a202c', glow: 'rgba(74, 85, 104, 0.8)' },
+    '砲': { gradient: ['#e74c3c', '#c0392b'], stroke: '#a93226', glow: 'rgba(231, 76, 60, 0.8)' },
+    '竜': { gradient: ['#e74c3c', '#c0392b'], stroke: '#a93226', glow: 'rgba(231, 76, 60, 0.8)' },
+    '鳳': { gradient: ['#e67e22', '#d35400'], stroke: '#ba4a00', glow: 'rgba(230, 126, 34, 0.8)' },
+    '炎': { gradient: ['#ff6b6b', '#ee5a52'], stroke: '#d63031', glow: 'rgba(255, 107, 107, 0.9)' },
+    '火': { gradient: ['#ff7f50', '#ff6347'], stroke: '#ff4500', glow: 'rgba(255, 127, 80, 0.9)' },
+    '水': { gradient: ['#3498db', '#2980b9'], stroke: '#1f5f8b', glow: 'rgba(52, 152, 219, 0.8)' },
+    '波': { gradient: ['#5dade2', '#3498db'], stroke: '#2874a6', glow: 'rgba(93, 173, 226, 0.8)' },
+    '木': { gradient: ['#27ae60', '#229954'], stroke: '#1e8449', glow: 'rgba(39, 174, 96, 0.8)' },
+    '葉': { gradient: ['#52be80', '#27ae60'], stroke: '#1e8449', glow: 'rgba(82, 190, 128, 0.8)' },
+    '光': { gradient: ['#f1c40f', '#f39c12'], stroke: '#d68910', glow: 'rgba(241, 196, 15, 0.9)' },
+    '星': { gradient: ['#9b59b6', '#8e44ad'], stroke: '#6c3483', glow: 'rgba(155, 89, 182, 0.8)' },
+    '闇': { gradient: ['#34495e', '#2c3e50'], stroke: '#1c2833', glow: 'rgba(52, 73, 94, 0.9)' },
+    '魔': { gradient: ['#8e44ad', '#7d3c98'], stroke: '#5b2c6f', glow: 'rgba(142, 68, 173, 0.9)' },
+    '銅': { gradient: ['#d4a574', '#b8860b'], stroke: '#996515', glow: 'rgba(212, 165, 116, 0.8)' },
+    '鉄': { gradient: ['#95a5a6', '#7f8c8d'], stroke: '#626567', glow: 'rgba(149, 165, 166, 0.8)' },
+    '錫': { gradient: ['#bdc3c7', '#95a5a6'], stroke: '#7b7d7d', glow: 'rgba(189, 195, 199, 0.8)' },
+    '鉛': { gradient: ['#7f8c8d', '#626567'], stroke: '#4d5656', glow: 'rgba(127, 140, 141, 0.8)' },
+    '宝': { gradient: ['#ffd700', '#ffb700'], stroke: '#b8860b', glow: 'rgba(255, 215, 0, 1.0)' },
+    '電': { gradient: ['#f1c40f', '#f39c12'], stroke: '#d68910', glow: 'rgba(241, 196, 15, 0.9)' },
+    '雷': { gradient: ['#3498db', '#2980b9'], stroke: '#1f5f8b', glow: 'rgba(52, 152, 219, 0.9)' },
+    '時': { gradient: ['#3498db', '#2874a6'], stroke: '#1f5f8b', glow: 'rgba(52, 152, 219, 0.8)' },
+    '氷': { gradient: ['#85c1e2', '#5dade2'], stroke: '#2e86ab', glow: 'rgba(133, 193, 226, 0.9)' },
+    '雪': { gradient: ['#ecf0f1', '#bdc3c7'], stroke: '#95a5a6', glow: 'rgba(236, 240, 241, 0.9)' },
+    '砂': { gradient: ['#f4d03f', '#f9e79f'], stroke: '#d4ac0d', glow: 'rgba(244, 208, 63, 0.8)' },
+    '風': { gradient: ['#a8e6cf', '#7bed9f'], stroke: '#2ed573', glow: 'rgba(168, 230, 207, 0.8)' },
+    '苔': { gradient: ['#58d68d', '#28b463'], stroke: '#1e8449', glow: 'rgba(88, 214, 141, 0.8)' },
+    '魚': { gradient: ['#5dade2', '#3498db'], stroke: '#2874a6', glow: 'rgba(93, 173, 226, 0.8)' },
+    '雲': { gradient: ['#d5d8dc', '#aab7b8'], stroke: '#85929e', glow: 'rgba(213, 216, 220, 0.8)' },
+    '虹': { gradient: ['#ff6b9d', '#c44569'], stroke: '#a5395d', glow: 'rgba(255, 107, 157, 0.9)' },
+    '毒': { gradient: ['#8e44ad', '#6c3483'], stroke: '#512e5f', glow: 'rgba(142, 68, 173, 0.9)' },
+    '沼': { gradient: ['#7d6608', '#5d4e04'], stroke: '#3e3202', glow: 'rgba(125, 102, 8, 0.8)' },
+    '鏡': { gradient: ['#85c1e2', '#5dade2'], stroke: '#2e86ab', glow: 'rgba(133, 193, 226, 0.9)' },
+    '映': { gradient: ['#9b59b6', '#8e44ad'], stroke: '#6c3483', glow: 'rgba(155, 89, 182, 0.8)' },
+    'あ': { gradient: ['#e74c3c', '#c0392b'], stroke: '#a93226', glow: 'rgba(231, 76, 60, 1.0)' },
+    '牢': { gradient: ['#5d6d7e', '#34495e'], stroke: '#212f3c', glow: 'rgba(93, 109, 126, 0.8)' },
+    '柵': { gradient: ['#7d6608', '#5d4e04'], stroke: '#3e3202', glow: 'rgba(125, 102, 8, 0.8)' },
+    '嶺': { gradient: ['#95a5a6', '#7f8c8d'], stroke: '#626567', glow: 'rgba(149, 165, 166, 0.8)' },
+    '峰': { gradient: ['#aab7b8', '#95a5a6'], stroke: '#7b7d7d', glow: 'rgba(170, 183, 184, 0.8)' },
+    '岩': { gradient: ['#626567', '#4d5656'], stroke: '#34495e', glow: 'rgba(98, 101, 103, 0.8)' },
+    '鉱': { gradient: ['#d4a574', '#b8860b'], stroke: '#996515', glow: 'rgba(212, 165, 116, 0.8)' },
+    '墓': { gradient: ['#34495e', '#2c3e50'], stroke: '#1c2833', glow: 'rgba(52, 73, 94, 0.9)' },
+    '霊': { gradient: ['#bb8fce', '#a569bd'], stroke: '#7d3c98', glow: 'rgba(187, 143, 206, 0.9)' },
+    '幻': { gradient: ['#d7bde2', '#c39bd3'], stroke: '#a569bd', glow: 'rgba(215, 189, 226, 0.9)' },
+    '霧': { gradient: ['#aed6f1', '#85c1e2'], stroke: '#5dade2', glow: 'rgba(174, 214, 241, 0.9)' },
+    '月': { gradient: ['#f9e79f', '#f4d03f'], stroke: '#d4ac0d', glow: 'rgba(249, 231, 159, 0.9)' },
+    '舟': { gradient: ['#85c1e2', '#5dade2'], stroke: '#2e86ab', glow: 'rgba(133, 193, 226, 0.8)' },
+    '機': { gradient: ['#95a5a6', '#7f8c8d'], stroke: '#626567', glow: 'rgba(149, 165, 166, 0.8)' },
+    '歯': { gradient: ['#bdc3c7', '#95a5a6'], stroke: '#7b7d7d', glow: 'rgba(189, 195, 199, 0.8)' },
+    '家': { gradient: ['#d4a574', '#b8860b'], stroke: '#996515', glow: 'rgba(212, 165, 116, 0.8)' },
+    '民': { gradient: ['#5dade2', '#3498db'], stroke: '#2874a6', glow: 'rgba(93, 173, 226, 0.8)' },
+    '畑': { gradient: ['#52be80', '#27ae60'], stroke: '#1e8449', glow: 'rgba(82, 190, 128, 0.8)' },
+    '泉': { gradient: ['#85c1e2', '#5dade2'], stroke: '#2e86ab', glow: 'rgba(133, 193, 226, 0.9)' },
+    '辰': { gradient: ['#e74c3c', '#c0392b'], stroke: '#a93226', glow: 'rgba(231, 76, 60, 1.0)' },
+    'K': { gradient: ['#e74c3c', '#c0392b'], stroke: '#a93226', glow: 'rgba(231, 76, 60, 1.0)' },
+    '実': { gradient: ['#52be80', '#27ae60'], stroke: '#1e8449', glow: 'rgba(82, 190, 128, 0.9)' },
+    '異': { gradient: ['#9b59b6', '#8e44ad'], stroke: '#6c3483', glow: 'rgba(155, 89, 182, 1.0)' },
+  };
+  
+  const colors = pieceColors[pieceChar] || { gradient: ['#f5e6d3', '#d4a574'], stroke: '#8b6f47', glow: 'rgba(139, 111, 71, 0.6)' };
+  
+  // SVGグラデーションを更新
+  const gradientStops = document.querySelectorAll('#pieceGradient stop');
+  if (gradientStops.length >= 2) {
+    gradientStops[0].setAttribute('style', `stop-color:${colors.gradient[0]};stop-opacity:1`);
+    gradientStops[1].setAttribute('style', `stop-color:${colors.gradient[1]};stop-opacity:1`);
+  }
+  
+  // 枠線の色を更新
+  const path = document.querySelector('.piece-shape path');
+  if (path) {
+    path.setAttribute('stroke', colors.stroke);
+  }
+  
+  // グローエフェクトを更新
+  const pieceCharEl = document.getElementById('piece-char');
+  if (pieceCharEl) {
+    pieceCharEl.style.setProperty('--glow-color', colors.glow);
+  }
+}
+
+function displayMovementGrid(moveType, pieceChar) {
+  const grid = document.getElementById('movement-grid');
+  grid.innerHTML = '';
+  
+  for (let i = 0; i < 49; i++) {
+    const row = Math.floor(i / 7);
+    const col = i % 7;
+    const isCenter = (row === 3 && col === 3);
+    
+    const cell = document.createElement('div');
+    cell.className = 'w-10 h-10 sm:w-12 sm:h-12 border border-gray-300 dark:border-gray-600 flex items-center justify-center rounded-sm';
+    
+    const isMovable = canMoveTo(moveType, row - 3, col - 3);
+    
+    if (isCenter) {
+      cell.classList.add('bg-primary/80', 'dark:bg-primary');
+      cell.innerHTML = `<span class="text-xl text-white dark:text-black">${pieceChar}</span>`;
+    } else if (isMovable) {
+      cell.classList.add('bg-primary/20', 'dark:bg-primary/30');
+    } else {
+      cell.classList.add('bg-gray-100', 'dark:bg-gray-700');
+    }
+    
+    grid.appendChild(cell);
+  }
+}
+
+function canMoveTo(moveType, dr, dc) {
+  if (dr === 0 && dc === 0) return false;
+  
+  switch (moveType) {
+    case 'pawn': return dr === -1 && dc === 0;
+    case 'lance': return dc === 0 && dr < 0;
+    case 'knight': return (dr === -2 && Math.abs(dc) === 1);
+    case 'silver': return (dr === -1 && Math.abs(dc) <= 1) || (dr === 1 && Math.abs(dc) === 1);
+    case 'gold': case 'fish': case 'peak': return (dr === -1 && Math.abs(dc) <= 1) || (dr === 0 && Math.abs(dc) === 1) || (dr === 1 && dc === 0);
+    case 'bishop': return Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= 3;
+    case 'rook': return (dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3);
+    case 'king': case 'flame': case 'tree': case 'ice': case 'machine': case 'treasure': case 'ore': case 'yan': return Math.abs(dr) <= 1 && Math.abs(dc) <= 1;
+    case 'ninja': return (Math.abs(dr) <= 1 && Math.abs(dc) <= 1) || (dr === -2 && Math.abs(dc) === 1);
+    case 'shadow': return (Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= 2) || (dr === 0 && Math.abs(dc) === 1);
+    case 'cannon': return (dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3);
+    case 'dragon': return (Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= 3) || ((dr === 0 || dc === 0) && Math.abs(dr) <= 1 && Math.abs(dc) <= 1);
+    case 'phoenix': return ((dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3)) || (Math.abs(dr) <= 1 && Math.abs(dc) <= 1);
+    case 'fire': return (dr === 0 && Math.abs(dc) <= 3) || (dc === 0 && Math.abs(dr) <= 3);
+    case 'water': case 'leaf': return Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= 2;
+    case 'wave': return (dr === 0 || dc === 0) && (Math.abs(dr) <= 2 || Math.abs(dc) <= 2);
+    case 'light': case 'thunder': case 'ridge': return Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= 3;
+    case 'star': case 'electric': case 'wind': case 'boat': return (dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3);
+    case 'dark': case 'time': return Math.abs(dr) <= 2 && Math.abs(dc) <= 2;
+    case 'demon': return (dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3);
+    case 'copper': case 'lead': return (dr === -2 && Math.abs(dc) === 1) || (dc === 0 && dr < 0 && dr >= -3);
+    case 'iron': case 'tin': return (dr === -1 && Math.abs(dc) <= 1) || (dr === 1 && Math.abs(dc) === 1);
+    case 'snow': return (dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3);
+    case 'sand': return Math.abs(dr) <= 3 && Math.abs(dc) <= 3;
+    case 'moss': case 'rainbow': case 'spring': case 'mirror': case 'film': case 'spirit': case 'fence': case 'rock': return (dr === 0 && Math.abs(dc) === 1) || (dc === 0 && Math.abs(dr) === 1);
+    case 'cloud': case 'moon': case 'end': case 'mutant': case 'dragonAwakened': return Math.abs(dr) <= 3 && Math.abs(dc) <= 3;
+    case 'poison': case 'swamp': return (dr === -1 && Math.abs(dc) === 1) || (dr === 1 && Math.abs(dc) === 1);
+    case 'phantom': return ((dr === 0 && Math.abs(dc) === 1) || (dc === 0 && Math.abs(dr) === 1)) || (dr === 0 && Math.abs(dc) === 2);
+    case 'mist': return (Math.abs(dr) === Math.abs(dc) && Math.abs(dr) === 1) || (dr === 0 && Math.abs(dc) === 1);
+    case 'gear': return Math.abs(dr) === Math.abs(dc) && Math.abs(dr) === 1;
+    case 'house': case 'field': return false;
+    case 'ah': return ((dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3)) || (Math.abs(dr) === Math.abs(dc) && Math.abs(dr) === 1);
+    case 'people': case 'experiment': return (dr === 0 && Math.abs(dc) === 1) || (dc === 0 && Math.abs(dr) === 1);
+    case 'prison': return ((dr === 0 || dc === 0) && (Math.abs(dr) <= 3 || Math.abs(dc) <= 3)) || (Math.abs(dr) === Math.abs(dc) && Math.abs(dr) === 1);
+    case 'grave': return ((dr === 0 && Math.abs(dc) === 1) || (dc === 0 && Math.abs(dr) === 1)) || (dr === -2 && Math.abs(dc) === 1);
+    case 'k': return Math.abs(dr) <= 1 && Math.abs(dc) <= 1;
+    default: return false;
+  }
+}
+
+function displayMovementDescription(moveType) {
+  const descriptions = {
+    pawn: '前方に1マス移動できる。',
+    lance: '前方に何マスでも進むことができる。',
+    knight: '前方2マス＋左右1マスの桂馬飛びができる。他の駒を飛び越えて移動できる。',
+    silver: '前前斜・前・後斜に移動できる。',
+    gold: '前前斜・前・左右・後に移動できる。',
+    bishop: '斜めに何マスでも移動できる。',
+    rook: '縦横に何マスでも移動できる。',
+    king: '周囲8方向に1マス移動できる。',
+    ninja: '周囲8方向に1マス＋前方桂馬飛びに移動できる。',
+    shadow: '斜めに2マス＋左右1マス移動できる。',
+    cannon: '縦横に何マスでも移動できる。駒を1つまたいで取れる。',
+    dragon: '斜めに何マスでも＋縦横1マス移動できる。',
+    phoenix: '縦横に何マスでも＋斜め1マス移動できる。',
+    flame: '周囲8方向に1マス移動できる。',
+    fire: '縦横に何マスでも移動できる。',
+    water: '斜めに2マスまで移動できる。',
+    wave: '縦横に2マスまで移動できる。',
+    tree: '周囲8方向に1マス移動できる。',
+    leaf: '斜めに2マスまで移動できる。',
+    light: '斜めに何マスでも移動できる。壁で反射して継続移動できる。',
+    star: '縦横に何マスでも移動できる。',
+    dark: '周囲8方向に2マスまで移動できる。',
+    demon: '縦横に何マスでも移動できる。',
+    copper: '前方桂馬飛び＋前方無限に移動できる。',
+    iron: '前前斜・前・後斜に移動できる。',
+    tin: '前前斜・前・後斜に移動できる。',
+    lead: '前方桂馬飛び＋前方無限に移動できる。',
+    treasure: '周囲8方向に1マス移動できる。',
+    electric: '縦横に何マスでも移動できる。',
+    thunder: '斜めに何マスでも移動できる。',
+    time: '周囲8方向に2マス移動できる。',
+    ice: '周囲8方向に1マス移動できる。',
+    snow: '縦横に何マスでも移動できる。',
+    sand: '前方に1マス移動できる。',
+    wind: '縦横に何マスでも移動できる。',
+    moss: '縦横1マスずつ移動できる。',
+    fish: '金将と同じ動きができる。',
+    cloud: '周囲8方向に何マスでも移動できる。',
+    rainbow: '縦横1マスずつ移動できる。',
+    poison: '前斜め＋後斜めに移動できる。',
+    swamp: '前斜め＋後斜めに移動できる。',
+    mirror: '縦横1マスずつ移動できる。正面の敵の動きをコピーする。',
+    film: '縦横1マスずつ移動できる。正面の敵の動きをコピーする。',
+    ah: '縦横4方向無限＋斜め4方向1マス。',
+    prison: '縦横無限＋斜め1マスに移動できる。',
+    fence: '縦横1マスずつ移動できる。',
+    ridge: '斜めに何マスでも移動できる。',
+    peak: '前前斜・前・左右・後に移動できる。',
+    rock: '縦横1マスずつ移動できる。',
+    ore: '周囲8方向に1マス移動できる。',
+    grave: '縦横1マス＋前方桂馬飛びに移動できる。',
+    spirit: '縦横1マスずつ移動できる。',
+    phantom: '縦横1マス＋桂馬横飛びに移動できる。',
+    mist: '斜め1マス＋左右1マスに移動できる。',
+    moon: '偶数回目の自分のターンで全方位に最大2マス。奇数回目の自分のターンで全方位に1マス。',
+    boat: '縦横に何マスでも移動できる。',
+    machine: '周囲8方向に1マス移動できる。',
+    gear: '斜め4方向に1マス移動できる。',
+    house: '固定駒のため移動できない。',
+    people: '縦横1マスずつ移動できる。',
+    field: '固定駒のため移動できない。',
+    spring: '縦横1マス移動できる。',
+    dragonAwakened: '縦横斜め全方位に何マスでも移動できる。',
+    k: '周囲8方向に1マス移動できる。',
+    experiment: '縦横1マスずつ移動できる。',
+    mutant: '変化前の駒の能力を継承する。',
+  };
+  
+  document.getElementById('movement-description').textContent = descriptions[moveType] || '行動範囲の説明';
+}
+
+function displayOtherPieces() {
+  const container = document.getElementById('other-pieces');
+  container.innerHTML = '';
+  
+  const startIndex = currentPage * PIECES_PER_PAGE;
+  const endIndex = Math.min(startIndex + PIECES_PER_PAGE, ALL_PIECES_DATA.length);
+  
+  for (let i = startIndex; i < endIndex; i++) {
+    const piece = ALL_PIECES_DATA[i];
+    const link = document.createElement('a');
+    link.className = 'flex items-center justify-center w-20 h-20 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors duration-200 cursor-pointer';
+    link.onclick = () => {
+      currentPieceIndex = i;
+      displayPiece(i);
+    };
+    link.innerHTML = `<span class="text-4xl font-bold text-gray-900 dark:text-gray-100">${piece.char}</span>`;
+    container.appendChild(link);
+  }
+}
+
+function previousPiece() {
+  if (currentPage > 0) {
+    currentPage--;
+    displayOtherPieces();
+  }
+}
+
+function nextPiece() {
+  const maxPage = Math.ceil(ALL_PIECES_DATA.length / PIECES_PER_PAGE) - 1;
+  if (currentPage < maxPage) {
+    currentPage++;
+    displayOtherPieces();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  getPieceFromURL();
+  displayPiece(currentPieceIndex);
+});
+</script>
+</body>
+</html> 
